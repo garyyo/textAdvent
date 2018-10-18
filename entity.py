@@ -18,7 +18,7 @@ class Dialogue:
         self.giveKeys = key
         self.takeKeys = unkey
 
-    def checkAllowed(self, keys):
+    def check_allowed(self, keys):
         for key in self.whitelistKeys:
             if key not in keys:
                 return False
@@ -27,42 +27,42 @@ class Dialogue:
                 return False
         return True
 
-    def getTopic(self):
+    def get_topic(self):
         return self.topic
 
-    def getText(self):
+    def get_text(self):
         return self.text
 
-    def getKeys(self):
+    def get_keys(self):
         return self.giveKeys, self.takeKeys
 
 
 class Entity:
     name: str
     description: str
-    initDescription: str
+    init_description: str
     firstLook: bool
     visible: bool
     inventory: List[Item]
 
-    def __init__(self, name, initDesc, desc):
+    def __init__(self, name, init_desc, desc):
         self.name = name
         self.description = desc
-        self.initDescription = initDesc
+        self.init_description = init_desc
         self.firstLook = True
         self.visible = True
 
-    def getDesc(self):
+    def get_desc(self):
         if not self.visible:
             return ""
         if self.firstLook:
-            return self.initDescription
+            return self.init_description
         return self.description
 
-    def getName(self):
+    def get_name(self):
         return self.name
 
-    def getVisible(self):
+    def get_visible(self):
         return self.visible
 
     def hide(self):
@@ -71,26 +71,26 @@ class Entity:
     def show(self):
         self.visible = True
 
-    def addToInventory(self, thing):
+    def add_to_inventory(self, thing):
         # append item to inventory list
         self.inventory.append(thing)
         pass
 
-    def removeFromInventory(self, index):
+    def remove_from_inventory(self, index):
         return self.inventory.pop(index)
 
     # get the index of an item in the players inventory, or None if it doesnt exist
-    def getInventoryIndex(self, itemName: str) -> int:
+    def get_inventory_index(self, item_name: str) -> int:
         for i in range(len(self.inventory)):
-            if self.inventory[i].name == itemName:
+            if self.inventory[i].name == item_name:
                 return i
 
-    def getInventory(self):
+    def get_inventory(self):
         return self.inventory
 
 
 class Item(Entity):
-    inventoryDesc: str
+    inventory_desc: str
     weight: float
     smell: str
     taste: str
@@ -98,80 +98,80 @@ class Item(Entity):
     pickupable: bool
     pickupKey: str
 
-    def __init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size, pickupable, pickupKey):
-        Entity.__init__(self, name, initDesc, desc)
-        self.inventoryDesc = invDesc
+    def __init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size, pickupable, pickup_key):
+        Entity.__init__(self, name, init_desc, desc)
+        self.inventory_desc = inv_desc
         self.weight = weight
         self.smell = smell
         self.taste = taste
         self.size = size
         self.pickupable = pickupable
-        self.pickupKey = pickupKey
+        self.pickupKey = pickup_key
 
-    def getInvDesc(self):
-        return self.inventoryDesc
+    def get_inv_desc(self):
+        return self.inventory_desc
 
-    def getWeight(self):
+    def get_weight(self):
         return self.weight
 
-    def getSmell(self):
+    def get_smell(self):
         return self.smell
 
-    def getTaste(self):
+    def get_taste(self):
         return self.taste
 
-    def getSize(self):
+    def get_size(self):
         return self.size
 
-    def getPickupable(self):
+    def get_pickupable(self):
         return self.pickupable
 
-    def getPickupKey(self):
+    def get_pickup_key(self):
         return self.pickupKey
 
 
 class Background(Item):
-    def __init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size):
-        Item.__init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size, False, "")
+    def __init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size):
+        Item.__init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size, False, "")
 
 
 class Container(Background):
 
-    def __init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size):
-        Background.__init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size)
+    def __init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size):
+        Background.__init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size)
 
 
 class Actor(Entity):
     dialogueList: Dict[str, Dialogue]
 
-    def __init__(self, name, initDesc, desc, ):
-        Entity.__init__(self, name, initDesc, desc)
+    def __init__(self, name, init_desc, desc, ):
+        Entity.__init__(self, name, init_desc, desc)
         self.dialogueList = {}
 
-    def addDialogue(self, chat: Dialogue):
-        self.dialogueList[chat.getTopic()] = chat
+    def add_dialogue(self, chat: Dialogue):
+        self.dialogueList[chat.get_topic()] = chat
         pass
 
-    def getTopics(self, keys):
-        retString = ""
+    def get_topics(self, keys):
+        return_string = ""
         for chatKey, chatEntry in self.dialogueList.items():
-            if chatEntry.checkAllowed(keys):
-                retString += chatEntry.getTopic() + "\n"
-        if retString == "":
-            return "They dont want to talk"
-        retString = "Topics:\n" + retString
-        return retString
+            if chatEntry.check_allowed(keys):
+                return_string += chatEntry.get_topic() + "\n"
+        if return_string == "":
+            return "They don't want to talk"
+        return_string = "Topics:\n" + return_string
+        return return_string
 
-    def checkTopic(self, topic, keys):
+    def check_topic(self, topic, keys):
         if topic in self.dialogueList:
-            return self.dialogueList[topic].checkAllowed(keys)
+            return self.dialogueList[topic].check_allowed(keys)
         return False
 
-    def speakTopic(self, topic):
+    def speak_topic(self, topic):
         if topic in self.dialogueList:
-            return self.dialogueList[topic].getText()
+            return self.dialogueList[topic].get_text()
         return ""
 
-    def giveDialogueKeys(self, topic):
+    def give_dialogue_keys(self, topic):
         if topic in self.dialogueList:
-            return self.dialogueList[topic].getKeys()
+            return self.dialogueList[topic].get_keys()

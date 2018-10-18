@@ -1,7 +1,7 @@
-from typing import List, Dict
+from typing import List
 
 
-class event:
+class Event:
     whitelistKeys: List[str]
     blacklistKeys: List[str]
     giveKeys: List[str]
@@ -10,13 +10,13 @@ class event:
     makeVisible: []
     makeInvisible: []
 
-    def __init__(self, whitelist, blacklist, key, unkey, eventText, eventType):
+    def __init__(self, whitelist, blacklist, key, unkey, event_text, event_type):
         self.whitelistKeys = whitelist
         self.blacklistKeys = blacklist
         self.giveKeys = key
         self.takeKeys = unkey
-        self.eventType = eventType
-        self.eventText = eventText
+        self.eventText = event_text
+        self.eventType = event_type
         self.makeVisible = []
         self.makeInvisible = []
 
@@ -24,17 +24,17 @@ class event:
         location = agent.get_location()
         for ref in self.makeVisible:
             name = ref[0]
-            classType = ref[1]
-            if classType == "actor":
+            class_type = ref[1]
+            if class_type == "actor":
                 location.get_actor(name).show()
-            if classType == "item":
+            if class_type == "item":
                 location.get_item(name).show()
         for ref in self.makeInvisible:
             name = ref[0]
-            classType = ref[1]
-            if classType == "actor":
+            class_type = ref[1]
+            if class_type == "actor":
                 location.get_actor(name).hide()
-            if classType == "item":
+            if class_type == "item":
                 location.get_item(name).hide()
 
         for key in self.giveKeys:
@@ -44,7 +44,7 @@ class event:
 
         return self.eventText
 
-    def checkAllowed(self, keys):
+    def check_allowed(self, keys):
         if self.whitelistKeys:
             for key in self.whitelistKeys:
                 if key not in keys:
@@ -55,22 +55,22 @@ class event:
                     return False
         return True
 
-    def getType(self):
+    def get_type(self):
         return self.eventType
 
-    def getKeys(self):
+    def get_keys(self):
         return self.giveKeys, self.takeKeys
 
-    def addMakeVisible(self, visibilityList):
-        self.makeVisible.append(visibilityList)
+    def add_make_visible(self, visibility_list):
+        self.makeVisible.append(visibility_list)
 
-    def addMakeInvisible(self, visibilityList):
-        self.makeInvisible.append(visibilityList)
+    def add_make_invisible(self, visibility_list):
+        self.makeInvisible.append(visibility_list)
 
-    def getMakeVisible(self):
+    def get_make_visible(self):
         return self.makeVisible
 
-    def getMakeInvisible(self):
+    def get_make_invisible(self):
         return self.makeInvisible
 
 # todo: dialogue extends event?

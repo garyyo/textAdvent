@@ -347,7 +347,7 @@
       "links": [
         {
           "roomName": "guild_hall",
-          "direction": "up"
+          "direction": "east"
         }
       ]
     },
@@ -391,7 +391,7 @@
           "type": "onEnter",
           "whitelist": [],
           "blacklist": [],
-          "key": [],
+          "key": ["win"],
           "unkey": [],
           "makeVisible": [
             {
