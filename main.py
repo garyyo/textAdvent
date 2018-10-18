@@ -6,7 +6,7 @@ from event import *
 from typing import List, Dict
 
 
-class bcolors:
+class BColors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
@@ -17,10 +17,10 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
-class room:
+class Room:
     links = []
-    items: List[item]
-    actors: List[actor]
+    items: List[Item]
+    actors: List[Actor]
     events: List[event]
     name: str
     initDesc: str
@@ -35,43 +35,43 @@ class room:
         self.actors = []
         self.events = []
 
-    def addItem(self, itemRef):
+    def add_item(self, itemRef):
         self.items.append(itemRef)
 
-    def removeItem(self, index: int):
+    def remove_item(self, index: int):
         return self.items.pop(index)
 
-    def getItemsIndex(self, itemName: str) -> int:
+    def get_items_index(self, itemName: str) -> int:
         for i in range(len(self.items)):
             if self.items[i].name == itemName:
                 return i
 
-    def getItemRef(self, index):
+    def get_item_ref(self, index):
         return self.items[index]
 
-    def getItemList(self):
+    def get_item_list(self):
         return self.items
 
-    def getActorsList(self):
+    def get_actors_list(self):
         return self.actors
 
-    def getDesc(self):
+    def get_desc(self):
         return self.description
 
-    def getLinksDesc(self):
+    def get_links_desc(self):
         if len(self.links) == 0:
             return "you are stuck here\n"
-        retString: str = bcolors.OKGREEN + "There are exits: \n" + bcolors.ENDC
+        retString: str = BColors.OKGREEN + "There are exits: \n" + BColors.ENDC
         for place in self.links:
             retString += "\tto the "
-            retString += place.getDirection() + ", "
-            retString += place.getLocation().getName()
+            retString += place.get_direction() + ", "
+            retString += place.get_location().get_name()
             retString += "\n"
         return retString
 
-    def getItemDesc(self):
+    def get_item_desc(self):
         itemCount = 0
-        retString = bcolors.OKGREEN + "Around you you see: \n" + bcolors.ENDC
+        retString = BColors.OKGREEN + "Around you you see: \n" + BColors.ENDC
         for itemRef in self.items:
             if not itemRef.getVisible():
                 continue
@@ -80,139 +80,139 @@ class room:
             retString += "\n"
             itemCount += 1
         if itemCount == 0:
-            return bcolors.OKGREEN + "There is nothing of interest around you\n" + bcolors.ENDC
+            return BColors.OKGREEN + "There is nothing of interest around you\n" + BColors.ENDC
         return retString
 
-    def getActorDesc(self):
+    def get_actor_desc(self):
         actorCount = 0
         retString = ""
-        for actorRef in self.actors:
-            if not actorRef.getVisible():
+        for actor in self.actors:
+            if not actor.getVisible():
                 continue
             retString += "\t"
-            retString += actorRef.getName() + ": "
-            retString += actorRef.getDesc()
+            retString += actor.getName() + ": "
+            retString += actor.getDesc()
             retString += "\n"
             actorCount += 1
 
         if actorCount == 0:
-            return bcolors.OKGREEN + "You are alone\n" + bcolors.ENDC
+            return BColors.OKGREEN + "You are alone\n" + BColors.ENDC
         if actorCount == 1:
-            retString = bcolors.OKGREEN + "There is someone here: \n" + bcolors.ENDC + retString
+            retString = BColors.OKGREEN + "There is someone here: \n" + BColors.ENDC + retString
         else:
-            retString = bcolors.OKGREEN + "There are people here: \n" + bcolors.ENDC + retString
+            retString = BColors.OKGREEN + "There are people here: \n" + BColors.ENDC + retString
         return retString
 
-    def addLink(self, location, direction):
+    def add_link(self, location, direction):
         self.links.append(link(location, direction))
 
-    def addActor(self, person):
+    def add_actor(self, person):
         self.actors.append(person)
 
-    def getActor(self, actorName):
-        for actorRef in self.actors:
-            if actorRef.getName() == actorName and actorRef.getVisible():
-                return actorRef
+    def get_actor(self, actorName):
+        for actor in self.actors:
+            if actor.getName() == actorName and actor.getVisible():
+                return actor
         return None
 
-    def getItem(self, itemName):
+    def get_item(self, itemName):
         for itemRef in self.items:
             if itemRef.getName() == itemName:
                 return itemRef
         return None
 
-    def addEvent(self, eventRef):
+    def add_event(self, eventRef):
         self.events.append(eventRef)
 
-    def getEvents(self):
+    def get_events(self):
         return self.events
 
-    def getLinks(self):
+    def get_links(self):
         return self.links
 
-    def getItems(self):
+    def get_items(self):
         return self.items
 
-    def getName(self):
+    def get_name(self):
         return self.name
 
 
-class player:
-    location: room
-    inventory: List[item]
+class Player:
+    location: Room
+    inventory: List[Item]
     conditions: List[str]
     keyList: List[str]
 
     def __init__(self, startLocation, startingKeys):
         self.location = startLocation
-        self.inventory: List[item] = []
+        self.inventory: List[Item] = []
         self.conditions: List[str] = []
         self.keyList = startingKeys
 
-    def getLocation(self):
+    def get_location(self):
         return self.location
 
     # get the index of an item in the players inventory, or None if it doesnt exist
-    def getInventoryIndex(self, itemName: str) -> int:
+    def get_inventory_index(self, itemName: str) -> int:
         for i in range(len(self.inventory)):
             if self.inventory[i].name == itemName:
                 return i
 
-    def getInventory(self):
+    def get_inventory(self):
         return self.inventory
 
     # returns 1 if success, None if failure
     def pickup(self, itemName):
         # find item in room
-        itemIndex = self.location.getItemsIndex(itemName)
+        itemIndex = self.location.get_items_index(itemName)
 
         # if item is in current location, remove from room, add to inventory
         if itemIndex is not None:
 
-            itemRef = self.location.getItemRef(itemIndex)
+            itemRef = self.location.get_item_ref(itemIndex)
             if not itemRef.getPickupable():
                 return None
 
-            self.location.removeItem(itemIndex)
-            self.addToInventory(itemRef)
-            self.addKey(itemRef.getPickupKey())
+            self.location.remove_item(itemIndex)
+            self.add_to_inventory(itemRef)
+            self.add_key(itemRef.getPickupKey())
 
         # return item
         return itemIndex
 
     # return index of item removed, None if item not there
     def drop(self, itemName):
-        itemIndex = self.getInventoryIndex(itemName)
+        itemIndex = self.get_inventory_index(itemName)
         if itemIndex is not None:
-            itemRef = self.removeFromInventory(itemIndex)
-            self.location.addItem(itemRef)
+            itemRef = self.remove_from_inventory(itemIndex)
+            self.location.add_item(itemRef)
         return itemIndex
 
-    def addToInventory(self, thing):
+    def add_to_inventory(self, thing):
         # append item to inventory list
         self.inventory.append(thing)
         pass
 
-    def removeFromInventory(self, index):
+    def remove_from_inventory(self, index):
         return self.inventory.pop(index)
 
-    def addKey(self, key):
+    def add_key(self, key):
         if key not in self.keyList:
             self.keyList.append(key)
             return len(self.keyList)
         return None
 
-    def removeKey(self, key):
+    def remove_key(self, key):
         if key in self.keyList:
             self.keyList.remove(key)
             return len(self.keyList)
         return None
 
-    def getKeys(self):
+    def get_keys(self):
         return self.keyList
 
-    def displayInventory(self):
-        retString = bcolors.OKGREEN + "You have on you: \n" + bcolors.ENDC
+    def display_inventory(self):
+        retString = BColors.OKGREEN + "You have on you: \n" + BColors.ENDC
         if len(self.inventory) == 0:
             return "you feel sad, for there is nothing in your pockets. "
         for thing in self.inventory:
@@ -221,34 +221,34 @@ class player:
         return retString
 
     def move(self, direction):
-        links = self.location.getLinks()
+        links = self.location.get_links()
         for place in links:
-            if place.getDirection() == direction:
-                self.location = place.getLocation()
-                return self.lookAround()
+            if place.get_direction() == direction:
+                self.location = place.get_location()
+                return self.look_around()
         return None
 
-    def getActor(self, actorName):
-        return self.location.getActor(actorName)
+    def get_actor(self, actorName):
+        return self.location.get_actor(actorName)
 
-    def talk(self, actorRef, topic):
-        if not actorRef.checkTopic(topic, self.getKeys()):
-            return actorRef.getName() + " does not know about this."
-        retString = actorRef.getName() + ": " + actorRef.speakTopic(topic)
-        giveKeys, takeKeys = actorRef.giveDialogueKeys(topic)
+    def talk(self, actor, topic):
+        if not actor.checkTopic(topic, self.get_keys()):
+            return actor.get_name() + " does not know about this."
+        retString = actor.get_name() + ": " + actor.speakTopic(topic)
+        giveKeys, takeKeys = actor.giveDialogueKeys(topic)
         for key in giveKeys:
-            self.addKey(key)
+            self.add_key(key)
         for key in takeKeys:
-            self.removeKey(key)
+            self.remove_key(key)
 
         return retString
 
-    def lookAround(self):
+    def look_around(self):
         retString = ""
-        retString += self.getLocation().getDesc() + "\n\n"
-        retString += self.getLocation().getLinksDesc() + "\n"
-        retString += self.getLocation().getActorDesc() + "\n"
-        retString += self.getLocation().getItemDesc()
+        retString += self.get_location().get_desc() + "\n\n"
+        retString += self.get_location().get_links_desc() + "\n"
+        retString += self.get_location().get_actor_desc() + "\n"
+        retString += self.get_location().get_item_desc()
 
         return retString
 
@@ -256,23 +256,23 @@ class player:
 class link:
     # room
     direction: str
-    location: room
+    location: Room
 
     def __init__(self, location, direction):
         self.location = location
         self.direction = direction
 
-    def getRoomName(self):
-        return self.location.getName()
+    def get_room_name(self):
+        return self.location.get_name()
 
-    def getLocation(self):
+    def get_location(self):
         return self.location
 
-    def getDirection(self):
+    def get_direction(self):
         return self.direction
 
 
-class parser:
+class Parser:
     words = {
         "article": ["a", "an", "the"],
         "preposition": ["of", "in", "to", "for", "with", "on", "at", "from", "by", "about", "as",
@@ -291,7 +291,7 @@ class parser:
         "inventory": ["inv", "inventory"],
         "key": ["key", "k"]
     }
-    player: player
+    player: Player
 
     commandList: List[str]
 
@@ -299,19 +299,19 @@ class parser:
         self.player = playerRef
         self.commandList = []
 
-    def splitCommands(self, commandStr):
+    def split_commands(self, commandStr):
         self.commandList = commandStr.split(" ") + ["", "", "", ""]
 
-    def parseCommands(self, commandStr):
-        self.splitCommands(commandStr)
-        self.stripCommands()
-        verb = self.identifyVerb()
-        dObject = self.identifyObject(verb)
+    def parse_commands(self, commandStr):
+        self.split_commands(commandStr)
+        self.strip_commands()
+        verb = self.identify_verb()
+        dObject = self.identify_object(verb)
         self.commandList[0] = verb
         self.commandList[1] = dObject
         return self.commandList
 
-    def identifyVerb(self):
+    def identify_verb(self):
         # look at first word, see if it matches any of the known verbs
         verb = self.commandList[0]
         bestVerb = ""
@@ -324,7 +324,7 @@ class parser:
                 break
         return bestVerb
 
-    def identifyObject(self, verb):
+    def identify_object(self, verb):
         dObject = self.commandList[1]
         if verb == "move":
             if dObject == "n":
@@ -342,26 +342,26 @@ class parser:
         # based on verb do different things
         return dObject
 
-    def collectEntityList(self):
+    def collect_entity_list(self):
         # get entities in location
-        curLocation = self.player.getLocation()
-        entityList = curLocation.getItemList()
-        entityList += curLocation.getActorsList()
+        curLocation = self.player.get_location()
+        entityList = curLocation.get_item_list()
+        entityList += curLocation.get_actors_list()
 
         # get items in player inventory
-        entityList += self.player.getInventory()
+        entityList += self.player.get_inventory()
 
         pass
 
-    def collectEntitiesFromEntity(self, entityRef):
+    def collect_entities_from_entity(self, entityRef):
         returnList = [entityRef]
-        inventoryList = entityRef.getInventory()
+        inventoryList = entityRef.get_inventory()
         for inventoryItem in inventoryList:
-            returnList += self.collectEntitiesFromEntity(inventoryItem)
+            returnList += self.collect_entities_from_entity(inventoryItem)
         return returnList
 
     # strip commandList of unnecessary words?
-    def stripCommands(self):
+    def strip_commands(self):
         counter = 0
         while counter < len(self.commandList):
             word = self.commandList[counter]
@@ -377,39 +377,39 @@ class parser:
             counter += 1
 
 
-class scenarioBuilder:
-    scenarioList: List[scenario]
+class ScenarioBuilder:
+    scenarioList: List[Scenario]
     playerModel: List[float]
 
     def __init__(self):
         self.scenarioList = []
         # self.playerModel = [0.51087279, 0.22050487, 0.4063116, 0.713533420, 0.08517401]
         self.playerModel = [0]
-        self.buildScenarios(["cat.json", "example.json"])
+        self.build_scenarios(["cat.json", "example.json"])
         pass
 
-    def buildScenarios(self, fileList):
+    def build_scenarios(self, fileList):
         for file in fileList:
-            self.scenarioList.append(scenario(file))
+            self.scenarioList.append(Scenario(file))
 
-    def chooseScenario(self):
+    def choose_scenario(self):
         if len(self.scenarioList) == 0:
             return None
-        scene = min(self.scenarioList, key=lambda x: abs(sum(x.getWeights()) - sum(self.playerModel)))
+        scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel)))
         self.scenarioList.remove(scene)
         return scene
 
 
-class scenario:
-    roomList: Dict[str, room]
+class Scenario:
+    roomList: Dict[str, Room]
     eventList: List
     actorList: List
     itemList: List
     startLocation: str
     jsonData: Dict
 
-    def __init__(self, fileName="example.json"):
-        with open(fileName) as f:
+    def __init__(self, file_name="example.json"):
+        with open(file_name) as f:
             self.jsonData = json.load(f)
         self.roomList = {}
         self.actorList = []
@@ -417,51 +417,51 @@ class scenario:
         self.eventList = []
         self.startLocation = "template"
 
-        self.roomCompile()
-        self.linkBuilder()
+        self.room_compile()
+        self.link_builder()
 
-    def roomCompile(self):
+    def room_compile(self):
         for roomJSON in self.jsonData["rooms"]:
             name = roomJSON["name"]
             if "startLocation" in roomJSON:
                 self.startLocation = name
-            newRoom = room(name,
+            newRoom = Room(name,
                            roomJSON["desc"] if "desc" in roomJSON else "",
                            roomJSON["initDesc"] if "initDesc" in roomJSON else ""
                            )
 
             if "items" in roomJSON:
                 for itemJSON in roomJSON["items"]:
-                    newRoom.addItem(self.itemCreate(itemJSON))
+                    newRoom.add_item(self.item_create(itemJSON))
             if "actors" in roomJSON:
                 for actorJSON in roomJSON["actors"]:
-                    newRoom.addActor(self.actorCreate(actorJSON))
+                    newRoom.add_actor(self.actor_create(actorJSON))
             if "events" in roomJSON:
                 for eventJSON in roomJSON["events"]:
-                    newRoom.addEvent(self.eventCreate(eventJSON))
+                    newRoom.add_event(self.event_create(eventJSON))
 
             self.roomList[name] = newRoom
 
-    def linkBuilder(self):
+    def link_builder(self):
         for roomJSON in self.jsonData["rooms"]:
             if "links" in roomJSON:
                 linkingRoom = self.roomList[roomJSON["name"]]
                 for linkJSON in roomJSON["links"]:
-                    linkingRoom.addLink(self.roomList[linkJSON["roomName"]], linkJSON["direction"])
+                    linkingRoom.add_link(self.roomList[linkJSON["roomName"]], linkJSON["direction"])
 
-    def actorCreate(self, actorJSON):
-        newActor = actor(
-            actorJSON["name"] if "name" in actorJSON else "",
-            actorJSON["initDesc"] if "initDesc" in actorJSON else "",
-            actorJSON["desc"] if "desc" in actorJSON else ""
+    def actor_create(self, actor_json):
+        newActor = Actor(
+            actor_json["name"] if "name" in actor_json else "",
+            actor_json["initDesc"] if "initDesc" in actor_json else "",
+            actor_json["desc"] if "desc" in actor_json else ""
         )
-        if "hidden" in actorJSON:
+        if "hidden" in actor_json:
             newActor.hide()
 
-        if "dialogues" in actorJSON:
-            for dialogueJSON in actorJSON["dialogues"]:
+        if "dialogues" in actor_json:
+            for dialogueJSON in actor_json["dialogues"]:
                 newActor.addDialogue(
-                    dialogue(dialogueJSON["topic"] if "topic" in dialogueJSON else "",
+                    Dialogue(dialogueJSON["topic"] if "topic" in dialogueJSON else "",
                              dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
                              dialogueJSON["whitelist"] if "whitelist" in dialogueJSON else "",
                              dialogueJSON["blacklist"] if "blacklist" in dialogueJSON else "",
@@ -473,42 +473,42 @@ class scenario:
         self.actorList.append(newActor)
         return newActor
 
-    def itemCreate(self, itemJSON):
-        newItem = item(
-            itemJSON["name"] if "name" in itemJSON else "",
-            itemJSON["initDesc"] if "initDesc" in itemJSON else "",
-            itemJSON["invDesc"] if "invDesc" in itemJSON else "",
-            itemJSON["desc"] if "desc" in itemJSON else "",
-            itemJSON["weight"] if "weight" in itemJSON else 0.0,
-            itemJSON["smell"] if "smell" in itemJSON else "",
-            itemJSON["taste"] if "taste" in itemJSON else "",
-            itemJSON["size"] if "size" in itemJSON else "",
-            itemJSON["pickupable"] if "pickupable" in itemJSON else False,
-            itemJSON["pickupKey"] if "pickupKey" in itemJSON else ""
+    def item_create(self, item_json):
+        newItem = Item(
+            item_json["name"] if "name" in item_json else "",
+            item_json["initDesc"] if "initDesc" in item_json else "",
+            item_json["invDesc"] if "invDesc" in item_json else "",
+            item_json["desc"] if "desc" in item_json else "",
+            item_json["weight"] if "weight" in item_json else 0.0,
+            item_json["smell"] if "smell" in item_json else "",
+            item_json["taste"] if "taste" in item_json else "",
+            item_json["size"] if "size" in item_json else "",
+            item_json["pickupable"] if "pickupable" in item_json else False,
+            item_json["pickupKey"] if "pickupKey" in item_json else ""
         )
-        if "hidden" in itemJSON:
+        if "hidden" in item_json:
             newItem.hide()
 
         self.itemList.append(newItem)
         return newItem
 
-    def eventCreate(self, eventJSON):
+    def event_create(self, event_json):
         newEvent = event(
-            eventJSON["whitelist"] if "whitelist" in eventJSON else "",
-            eventJSON["blacklist"] if "blacklist" in eventJSON else "",
-            eventJSON["key"] if "key" in eventJSON else "",
-            eventJSON["unkey"] if "unkey" in eventJSON else "",
-            eventJSON["text"] if "text" in eventJSON else "",
-            eventJSON["type"] if "type" in eventJSON else ""
+            event_json["whitelist"] if "whitelist" in event_json else "",
+            event_json["blacklist"] if "blacklist" in event_json else "",
+            event_json["key"] if "key" in event_json else "",
+            event_json["unkey"] if "unkey" in event_json else "",
+            event_json["text"] if "text" in event_json else "",
+            event_json["type"] if "type" in event_json else ""
         )
-        if "makeVisible" in eventJSON:
-            for visibleJSON in eventJSON["makeVisible"]:
+        if "makeVisible" in event_json:
+            for visibleJSON in event_json["makeVisible"]:
                 newEvent.addMakeVisible([
                     visibleJSON["name"] if "name" in visibleJSON else "",
                     visibleJSON["class"] if "class" in visibleJSON else ""
                 ])
-        if "makeInvisible" in eventJSON:
-            for visibleJSON in eventJSON["makeInvisible"]:
+        if "makeInvisible" in event_json:
+            for visibleJSON in event_json["makeInvisible"]:
                 newEvent.addMakeInvisible([
                     visibleJSON["name"] if "name" in visibleJSON else "",
                     visibleJSON["class"] if "class" in visibleJSON else ""
@@ -517,17 +517,17 @@ class scenario:
         self.eventList.append(newEvent)
         return newEvent
 
-    def getWeights(self):
+    def get_weights(self):
         return self.jsonData["weights"] if "weights" in self.jsonData else [0, 0, 0, 0, 0]
 
-    def getPlayer(self):
+    def get_player(self):
         startingKeys = self.jsonData["startingKeys"] if "startingKeys" in self.jsonData else []
-        return player(self.roomList[self.startLocation], startingKeys)
+        return Player(self.roomList[self.startLocation], startingKeys)
 
 
-class display:
-    location: room
-    agent: player
+class Display:
+    location: Room
+    player: Player
 
     # pass in arbitrary objects and get proper formatting for their description.
     def __init__(self):
@@ -535,11 +535,11 @@ class display:
 
     def display(self):
         # confirm command
-        self.display_command()
+        # self.display_command()
         # display any relevant events
-        self.display_event()
+        # self.display_event()
         # print place description
-        self.display_
+        # self.display_
         # exits
 
         # people
@@ -550,47 +550,48 @@ class display:
     # this is to act as a template, or interface between actually printing things out and using curses.
     pass
 
-def act(command, agent):
+
+def act(command, player):
     # do verb on object
     verb = command[0]
     target = command[1]
 
     if verb == "pickup":
-        attempt = agent.pickup(target)
+        attempt = player.pickup(target)
         if attempt is not None:
             print("you have picked up", target)
         else:
             print("you cannot pick that up")
     elif verb == "drop":
-        attempt = agent.drop(target)
+        attempt = player.drop(target)
         if attempt is not None:
             print("you have dropped", target)
         else:
             print("you do not have that item in your pockets")
     elif verb == "move":
-        attempt = agent.move(target)
+        attempt = player.move(target)
         if attempt is None:
             print("there is nothing in that direction")
         else:
-            eventListener("onEnter", agent)
+            event_listener("onEnter", player)
     elif verb == "talk":
         topic = command[2]
-        actorRef = agent.getActor(target)
+        actor = player.get_actor(target)
         if topic == "":
-            if actorRef is not None:
-                print(actorRef.getTopics(agent.getKeys()))
+            if actor is not None:
+                print(actor.getTopics(player.get_keys()))
             else:
                 print("you talk into the aether to someone who isn't there")
         else:
-            if actorRef is not None:
-                print(agent.talk(actorRef, topic))
+            if actor is not None:
+                print(player.talk(actor, topic))
                 print("")
             else:
                 print("you talk into the aether to someone who isn't there")
     elif verb == "inventory":
-        print(agent.displayInventory())
+        print(player.display_inventory())
     elif verb == "look":
-        print(agent.lookAround())
+        print(player.look_around())
 
     elif verb == "use":
         # the target is activated and key might be given (which then would activate event?)
@@ -598,34 +599,34 @@ def act(command, agent):
     elif verb == "examine":
         pass
     elif verb == "key":
-        print(agent.getKeys())
+        print(player.get_keys())
     else:
         print("I do not understand that command")
 
     # basic interaction types
 
 
-def eventListener(eventType, agent):
-    events = agent.getLocation().getEvents()
+def event_listener(event_type, player):
+    events = player.get_location().get_events()
     for eventRef in events:
-        if eventRef.getType() == eventType:
-            # print(agent.getKeys())
+        if eventRef.getType() == event_type:
+            # print(player.getKeys())
             # print(eventRef.whitelistKeys, eventRef.blacklistKeys)
 
-            if eventRef.checkAllowed(agent.getKeys()):
+            if eventRef.checkAllowed(player.get_keys()):
                 # print("event activated!")
-                print(eventRef.activate(agent))
+                print(eventRef.activate(player))
             # else:
             #     print("no event activated :(")
 
 
-def winCondition(agent):
+def win_condition(player):
     # what is the win condition
     # when the player gets a win key!
-    if "win" in agent.getKeys():
+    if "win" in player.get_keys():
         print("you won!")
         print("next scenario!")
-        agent.removeKey("win")
+        player.remove_key("win")
         return True
     return False
 
@@ -641,36 +642,36 @@ def main():
     #       "inv\n")
     # time.sleep(5)
 
-    dungeonMaster = scenarioBuilder()
+    dungeon_master = ScenarioBuilder()
 
     while True:
-        scene = dungeonMaster.chooseScenario()
+        scene = dungeon_master.choose_scenario()
         if scene is None:
             print("you won the game! congrats.")
             exit(1)
-        agent = scene.getPlayer()
-        inParser = parser(agent)
+        player = scene.get_player()
+        parser = Parser(player)
 
         # have the player enter the room officially.
-        eventListener("onEnter", agent)
+        event_listener("onEnter", player)
 
-        while not winCondition(agent):
+        while not win_condition(player):
             # TODO: implement pre/in/post act functions
 
             # current state of pre act function
-            print(agent.lookAround())
+            print(player.look_around())
 
             # input
             command = input("> ")
-            commandArray = inParser.parseCommands(command)
+            command_array = parser.parse_commands(command)
 
             # interpret input
-            # commandArray = parseInput(command, agent)
+            # command_array = parseInput(command, player)
             # act on input and display
-            act(commandArray, agent)
-            eventListener("active", agent)
+            act(command_array, player)
+            event_listener("active", player)
 
-            # postAct(commandArray, agent)
+            # postAct(command_array, player)
 
         # give the player some blank space to look at
         print("\n\n\n\n\n\n\n\n")

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Dict
 
 
-class dialogue:
+class Dialogue:
     topic: str
     text: str
     whitelistKeys: List[str]
@@ -37,13 +37,13 @@ class dialogue:
         return self.giveKeys, self.takeKeys
 
 
-class entity:
+class Entity:
     name: str
     description: str
     initDescription: str
     firstLook: bool
     visible: bool
-    inventory: List[item]
+    inventory: List[Item]
 
     def __init__(self, name, initDesc, desc):
         self.name = name
@@ -89,7 +89,7 @@ class entity:
         return self.inventory
 
 
-class item(entity):
+class Item(Entity):
     inventoryDesc: str
     weight: float
     smell: str
@@ -99,7 +99,7 @@ class item(entity):
     pickupKey: str
 
     def __init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size, pickupable, pickupKey):
-        entity.__init__(self, name, initDesc, desc)
+        Entity.__init__(self, name, initDesc, desc)
         self.inventoryDesc = invDesc
         self.weight = weight
         self.smell = smell
@@ -130,25 +130,25 @@ class item(entity):
         return self.pickupKey
 
 
-class background(item):
+class Background(Item):
     def __init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size):
-        item.__init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size, False, "")
+        Item.__init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size, False, "")
 
 
-class container(background):
+class Container(Background):
 
     def __init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size):
-        background.__init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size)
+        Background.__init__(self, name, initDesc, invDesc, desc, weight, smell, taste, size)
 
 
-class actor(entity):
-    dialogueList: Dict[str, dialogue]
+class Actor(Entity):
+    dialogueList: Dict[str, Dialogue]
 
     def __init__(self, name, initDesc, desc, ):
-        entity.__init__(self, name, initDesc, desc)
+        Entity.__init__(self, name, initDesc, desc)
         self.dialogueList = {}
 
-    def addDialogue(self, chat: dialogue):
+    def addDialogue(self, chat: Dialogue):
         self.dialogueList[chat.getTopic()] = chat
         pass
 

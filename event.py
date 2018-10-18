@@ -21,26 +21,26 @@ class event:
         self.makeInvisible = []
 
     def activate(self, agent):
-        location = agent.getLocation()
+        location = agent.get_location()
         for ref in self.makeVisible:
             name = ref[0]
             classType = ref[1]
             if classType == "actor":
-                location.getActor(name).show()
+                location.get_actor(name).show()
             if classType == "item":
-                location.getItem(name).show()
+                location.get_item(name).show()
         for ref in self.makeInvisible:
             name = ref[0]
             classType = ref[1]
             if classType == "actor":
-                location.getActor(name).hide()
+                location.get_actor(name).hide()
             if classType == "item":
-                location.getItem(name).hide()
+                location.get_item(name).hide()
 
         for key in self.giveKeys:
-            agent.addKey(key)
+            agent.add_key(key)
         for key in self.takeKeys:
-            agent.removeKey(key)
+            agent.remove_key(key)
 
         return self.eventText
 
