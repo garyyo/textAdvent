@@ -1,0 +1,56 @@
+agent we are interested in is the drama manger
+
+ability for th game to play itself
+
+shoudl there be a global or per quest player model
+
+figure out which actions
+
+player model is a list of actions and weights towards them
+
+
+two systems we need
+    player modeling
+    picking quests based on player modeling.
+        load multiple scenarios
+        choose based on closest to player model
+
+
+design doc?
+
+
+rough map of town
+
+whitelist is more of a required
+blacklist is more of a forbidden
+
+if you dont have a whitelist, you cant activate
+if you do have a blacklist, you cant activate
+
+it errs on the side of not activating.
+
+mirror neurons. have a machine learn from seeing things and processing those actions as if it did them itself.
+
+      c
++ - - G - - +
+| t g F b . |
+| . . m . . |
++ - - G - - +
+
+G: gate
+g: guild
+F: starting fountain
+b: babushka's house
+t: tavern
+m: market
+c: final location of cat
+
+
+more scenarios, at 4
+get player model data. at least based on how many times user does an action. get scenarios that
+implement looking at items, and getting keys from that.
+when to offer the quest: when the player gets bored
+    when the players boredom stat goes below some thershold
+how does it look like to offer the quest
+    how do you make the player know there is an alternative without being too disruptive
+how to choose the quest to offer.

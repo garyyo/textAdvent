@@ -1,0 +1,224 @@
+{
+  "rooms": [
+    {
+      "name": "template",
+      "initDesc": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [
+            ""
+          ],
+          "blacklist": [
+            ""
+          ],
+          "key": [
+            ""
+          ],
+          "unkey": [
+            ""
+          ],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "template",
+          "direction": "up"
+        }
+      ]
+    },
+
+    {
+      "name": "park bench",
+      "initDesc": "You find yourself sitting in a forest clearing on a bench next to a tree. you are unsure of how you got here",
+      "desc": "a nice park bench, painted black. beside is a tree, a path leading north and south extends in front",
+      "startLocation": true,
+      "actors": [
+        {
+          "name": "jeb",
+          "desc": "just an upside down dude",
+          "initDesc": "you see a strange man looking at a picture book of birds, but stranger still is that he is upside down",
+          "dialogues": [
+            {
+              "topic": "updown",
+              "text": "what do you mean I am upside down? I believe you have it all wrong, it is you that is upside down",
+              "whitelist": [
+                "alive"
+              ],
+              "blacklist": [
+                "jebUpsideDownAnswered"
+              ],
+              "key": [
+                "jebBook",
+                "jebUpsideDownAnswered"
+
+              ],
+              "unkey": []
+            },
+            {
+              "topic": "book",
+              "text": "oh this old text? im bird watching, trying to figure out what that thing is. (he points towards the finch)",
+              "whitelist": [
+                "jebBook"
+              ],
+              "blacklist": [],
+              "key": [
+                "finch"
+              ],
+              "unkey": []
+            }
+
+          ]
+        }
+      ],
+
+      "items": [
+        {
+          "name":"fork",
+          "initDesc": "a fork sitting on the ground",
+          "invDesc": "a fork that stabs you when you stick your hands in your pockets too fast",
+          "desc": "you left a fork here",
+          "weight": 0,
+          "pickupable": true,
+          "pickupKey": "fork"
+        },
+        {
+          "name":"apple",
+          "initDesc": "an apple that sits on the ground below a tree",
+          "invDesc": "an apple that is too hard to eat",
+          "desc": "you left an apple here",
+          "weight": 0,
+          "pickupable": true,
+          "pickupKey": "food"
+        },
+        {
+          "name":"finch",
+          "initDesc": "a finch, in the tree",
+          "invDesc": "still alive despite being stuffed into your pockets...",
+          "desc": "jeb was right, there it is, a bird. who would have guessed",
+          "hidden": "",
+          "weight": 0,
+          "pickupable": false
+        }
+      ],
+      "events": [
+        {
+          "text": "jeb leaves",
+          "type": "active",
+          "whitelist": [
+            "finch"
+          ],
+          "blacklist": [
+            "jebGone"
+          ],
+          "key": [
+            "jebGone"
+          ],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "finch",
+              "class": "item"
+            }
+          ],
+          "makeInvisible": [
+            {
+              "name": "jeb",
+              "class": "actor"
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "a cabin",
+          "direction": "north"
+        }
+      ]
+    },
+    {
+      "name": "a cabin",
+      "initDesc": "The sight of an abandoned cabin comes into view as you climb up the hill. it is balanced precariously on the cliff overlooking the sea.",
+      "desc": "a cabin rests on a cliff in front of the sea.",
+
+      "items": [],
+      "events": [
+        {
+          "text": "a ghost suddenly appears before your eyes! \n ghost: gimme dat apple, i wanna eat it\n the ghost suddenly and violently kills you.",
+          "type": "onEnter",
+          "whitelist": [
+            "fork",
+            "food"
+          ],
+          "blacklist": [],
+          "key": [
+            "win"
+          ],
+          "unkey": []
+        }
+      ],
+      "links": [
+        {
+          "roomName": "park bench",
+          "direction": "south"
+        }
+      ]
+    }
+  ],
+  "startingKeys":[
+    "alive"
+  ],
+  "weights":[
+    0.5108727962369497 ,
+    0.22050487773893268 ,
+    0.4063116402238053 ,
+    0.7135334203933531 ,
+    0.08517401851066053
+  ]
+}

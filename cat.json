@@ -1,0 +1,533 @@
+{
+  "rooms": [
+    {
+      "name": "template",
+      "initDesc": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [
+            ""
+          ],
+          "blacklist": [
+            ""
+          ],
+          "key": [
+            ""
+          ],
+          "unkey": [
+            ""
+          ],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "template",
+          "direction": "up"
+        }
+      ]
+    },
+    {
+      "name": "outside_gate",
+      "desc": "you stand outside the gate",
+      "links": [
+        {
+          "roomName": "north_gate",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "name": "north_gate",
+      "initDesc": "the north gate of town stands tall in front of you. its not actually that tall, about 3 meters, but its also not that big of a town",
+      "desc": "",
+      "actors": [
+        {
+          "name": "guard",
+          "desc": "a sleepy guard",
+          "initDesc": "a sleepy guard",
+          "dialogues": [
+            {
+              "topic": "cat",
+              "text": "I have seen many cats come and go through this gate dude, you gotta be a little bit more specific",
+              "whitelist": [
+                "catQuest"
+              ],
+              "blacklist": [
+                "catQuest-clue-orange"
+              ],
+              "key": [],
+              "unkey": []
+            },
+            {
+              "topic": "orange cat",
+              "text": "you know, i think i do remember seeing someone chasing around an orange cat. some creepy old dude, wore a red cloak. you should ask the bartender down at tavern, he seems to know just about everyone in this town",
+              "whitelist": [
+                "catQuest-clue-orange"
+              ],
+              "blacklist": [],
+              "key": [],
+              "unkey": []
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "you entered!",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": [],
+          "key": [],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "outside_gate",
+          "direction": "north"
+        },
+        {
+          "roomName": "fountain",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "name": "fountain",
+      "initDesc": "",
+      "desc": "you are at a fountain. a shining beacon in the middle of the town",
+      "startLocation": true,
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [],
+              "blacklist": [],
+              "key": [],
+              "unkey": []
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "You awaken in front of a fountain, it was just a dream. now to get on to your day job, finding a cat for an old lady.",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": [
+            "fountain-start"
+          ],
+          "key": [
+            "fountain-start",
+            "catQuest"
+          ],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "north_gate",
+          "direction": "north"
+        },
+        {
+          "roomName": "market",
+          "direction": "south"
+        },
+        {
+          "roomName": "guild_hall",
+          "direction": "west"
+        },
+        {
+          "roomName": "babushka_house",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "name": "guild_hall",
+      "initDesc": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [],
+              "blacklist": [],
+              "key": [],
+              "unkey": []
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": [],
+          "key": [],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "fountain",
+          "direction": "east"
+        },
+        {
+          "roomName": "tavern",
+          "direction": "west"
+        }
+      ]
+    },
+    {
+      "name": "tavern",
+      "initDesc": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [],
+              "blacklist": [],
+              "key": [],
+              "unkey": []
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": [],
+          "key": [],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "guild_hall",
+          "direction": "up"
+        }
+      ]
+    },
+    {
+      "name": "babushka_house",
+      "initDesc": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [],
+              "blacklist": [],
+              "key": [],
+              "unkey": []
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": [],
+          "key": [],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "fountain",
+          "direction": "west"
+        }
+      ]
+    },
+    {
+      "name": "market",
+      "initDesc": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [],
+              "blacklist": [],
+              "key": [],
+              "unkey": []
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": [],
+          "key": [],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "fountain",
+          "direction": "north"
+        },
+        {
+          "roomName": "south_gate",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "name": "south_gate",
+      "initDesc": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [],
+              "blacklist": [],
+              "key": [],
+              "unkey": []
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": [],
+          "key": [],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "market",
+          "direction": "north"
+        }
+      ]
+    }
+  ],
+  "startingKeys":[
+    "alive"
+  ]
+}
