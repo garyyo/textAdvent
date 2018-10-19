@@ -280,22 +280,17 @@ class Display:
         self.player = player
         pass
 
-    def display(self):
-        # confirm command
-        # self.display_command()
-        # display any relevant events
-        # self.display_event()
-        # print place description
-        # self.display_
-        # exits
-
-        # people
-
-        # items
+    def display_room(self):
+        self.link_list()
+        print()
+        self.actor_list()
+        print()
+        self.item_list()
+        print()
 
         pass
 
-    def confirm_command(self):
+    def confirm_command(self, command):
         # if inventory command, display inventory in a nicely formatted manner.
 
         pass
@@ -324,7 +319,7 @@ class Display:
         print_list = []
         actor_list = self.player.get_location().get_actors_list()
         if len(actor_list) > 0:
-            print_list.append("There is someone here:")
+            print_list.append(BColors.OKGREEN + "There is someone here:" + BColors.ENDC)
             for actor in actor_list:
                 print_list.append("\t" + actor.get_name() + ": " + actor.get_desc())
         else:
@@ -333,13 +328,14 @@ class Display:
 
     def item_list(self):
         print_list = []
-        actor_list = self.player.get_location().get_actors_list()
-        if len(actor_list) > 0:
-            print_list.append("There is someone here:")
-            for actor in actor_list:
-                print_list.append("\t" + actor.get_name() + ": " + actor.get_desc())
+        item_list = self.player.get_location().get_item_list()
+        if len(item_list) > 0:
+            print_list.append("There is something here:")
+            for item in item_list:
+                if item.get_visible():
+                    print_list.append("\t" + item.get_name() + ": " + item.get_desc())
         else:
-            print_list.append("You are alone")
+            print_list.append("There is nothing here")
         print("\n".join(print_list))
 
     def link_list(self):
@@ -392,9 +388,9 @@ def act(command, player):
             else:
                 print("you talk into the aether to someone who isn't there")
     elif verb == "inventory":
-        print(player.display_inventory())
+        pass
     elif verb == "look":
-        print(player.look_around())
+        pass
 
     elif verb == "use":
         # the target is activated and key might be given (which then would activate event?)
@@ -463,7 +459,8 @@ def main():
             # TODO: implement pre/in/post act functions
 
             # current state of pre act function
-            print(player.look_around())
+
+            display.display_room()
 
             # input
             command = input("> ")

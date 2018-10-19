@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict
+# from typing import List, Dict
 
 from entity import *
 from event import *
@@ -38,58 +38,14 @@ class Room:
         return self.items[index]
 
     def get_item_list(self):
-        return self.items
+        return list(filter(lambda x: x.get_visible(), self.items))
 
     def get_actors_list(self):
-        return self.actors
+        return list(filter(lambda x: x.get_visible(), self.actors))
 
     def get_desc(self):
         return self.description
 
-    def get_links_desc(self):
-        if len(self.links) == 0:
-            return "you are stuck here\n"
-        return_string: str = BColors.OKGREEN + "There are exits: \n" + BColors.ENDC
-        for place in self.links:
-            return_string += "\tto the "
-            return_string += place.get_direction() + ", "
-            return_string += place.get_location().get_name()
-            return_string += "\n"
-        return return_string
-
-    def get_item_desc(self):
-        item_count = 0
-        return_string = BColors.OKGREEN + "Around you you see: \n" + BColors.ENDC
-        for item in self.items:
-            if not item.get_visible():
-                continue
-            return_string += "\t"
-            return_string += item.get_desc()
-            return_string += "\n"
-            item_count += 1
-        if item_count == 0:
-            return BColors.OKGREEN + "There is nothing of interest around you\n" + BColors.ENDC
-        return return_string
-
-    def get_actor_desc(self):
-        actor_count = 0
-        return_string = ""
-        for actor in self.actors:
-            if not actor.get_visible():
-                continue
-            return_string += "\t"
-            return_string += actor.get_name() + ": "
-            return_string += actor.get_desc()
-            return_string += "\n"
-            actor_count += 1
-
-        if actor_count == 0:
-            return BColors.OKGREEN + "You are alone\n" + BColors.ENDC
-        if actor_count == 1:
-            return_string = BColors.OKGREEN + "There is someone here: \n" + BColors.ENDC + return_string
-        else:
-            return_string = BColors.OKGREEN + "There are people here: \n" + BColors.ENDC + return_string
-        return return_string
 
     def add_link(self, location, direction):
         self.links.append(Link(location, direction))
@@ -213,7 +169,7 @@ class Player:
         for place in links:
             if place.get_direction() == direction:
                 self.location = place.get_location()
-                return self.look_around()
+                return True
         return None
 
     def get_actor(self, actor_name):
@@ -228,15 +184,6 @@ class Player:
             self.add_key(key)
         for key in take_keys:
             self.remove_key(key)
-
-        return return_string
-
-    def look_around(self):
-        return_string = ""
-        return_string += self.get_location().get_desc() + "\n\n"
-        return_string += self.get_location().get_links_desc() + "\n"
-        return_string += self.get_location().get_actor_desc() + "\n"
-        return_string += self.get_location().get_item_desc()
 
         return return_string
 
