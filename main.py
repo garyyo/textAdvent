@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import math
 
 from entity import *
 from event import *
@@ -527,11 +528,11 @@ class Scenario:
 
 
 class Display:
-    location: Room
     player: Player
 
     # pass in arbitrary objects and get proper formatting for their description.
-    def __init__(self):
+    def __init__(self, player):
+        self.player = player
         pass
 
     def display(self):
@@ -548,8 +549,64 @@ class Display:
         # items
 
         pass
-    # this is to act as a template, or interface between actually printing things out and using curses.
-    pass
+
+    def confirm_command(self):
+        # if inventory command, display inventory in a nicely formatted manner.
+
+        pass
+
+    def inventory(self):
+        if not self.player.get_inventory():
+            return
+        print_list = []
+        inventory_width = 5 + len(max(self.player.get_inventory(), key=lambda x: len(x.get_inv_desc())).get_inv_desc())
+        print_list.append("=" + ("-"*int(inventory_width)) + "=")
+        print_list.append("|" + (" "*int(inventory_width)) + "|")
+        item_num = 0
+        for item in self.player.get_inventory():
+            item_num += 1
+            d = " " + str(item_num) + ": " + item.get_inv_desc()
+            d_length = len(d)
+            d_spaced =  d + (math.floor((inventory_width - d_length)) * " ")
+            print_list.append("|" + d_spaced + "|")
+
+        print_list.append("|" + (" "*inventory_width) + "|")
+        print_list.append("=" + ("-"*inventory_width) + "=")
+
+        print("\n".join(print_list))
+
+    def actor_list(self):
+        print_list = []
+        actor_list = self.player.get_location().get_actors_list()
+        if len(actor_list) > 0:
+            print_list.append("There is someone here:")
+            for actor in actor_list:
+                print_list.append("\t" + actor.get_name() + ": " + actor.get_desc())
+        else:
+            print_list.append("You are alone")
+        print("\n".join(print_list))
+
+    def item_list(self):
+        print_list = []
+        actor_list = self.player.get_location().get_actors_list()
+        if len(actor_list) > 0:
+            print_list.append("There is someone here:")
+            for actor in actor_list:
+                print_list.append("\t" + actor.get_name() + ": " + actor.get_desc())
+        else:
+            print_list.append("You are alone")
+        print("\n".join(print_list))
+
+    def link_list(self):
+        print_list = []
+        link_list = self.player.get_location().get_links()
+        if len(link_list) > 0:
+            print_list.append("There are places to go:")
+            for link in link_list:
+                print_list.append("\t" + link.get_direction() + ": " + link.get_room_name())
+        else:
+            print_list.append("There is nowhere to go")
+        print("\n".join(print_list))
 
 
 def act(command, player):
@@ -652,6 +709,7 @@ def main():
             exit(1)
         player = scene.get_player()
         parser = Parser(player)
+        display = Display(player)
 
         # have the player enter the room officially.
         event_listener("onEnter", player)
@@ -671,7 +729,6 @@ def main():
             # act on input and display
             act(command_array, player)
             event_listener("active", player)
-
             # postAct(command_array, player)
 
         # give the player some blank space to look at
