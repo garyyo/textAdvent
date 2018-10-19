@@ -51,8 +51,8 @@ class Parser:
     def parse_commands(self, command_str):
         self.split_commands(command_str)
         self.strip_commands()
-        verb = self.identify_verb()
-        direct_object = self.identify_object(verb)
+        verb = self.identify_verb().lower()
+        direct_object = self.identify_object(verb).lower()
         self.commandList[0] = verb
         self.commandList[1] = direct_object
         return self.commandList
@@ -129,8 +129,8 @@ class ScenarioBuilder:
 
     def __init__(self):
         self.scenarioList = []
-        self.playerModel = [0.51087279, 0.22050487, 0.4063116, 0.713533420, 0.08517401]
-        # self.playerModel = [0]
+        # self.playerModel = [0.51087279, 0.22050487, 0.4063116, 0.713533420, 0.08517401]
+        self.playerModel = [0]
         self.build_scenarios(["cat.json", "example.json"])
         pass
 
@@ -307,7 +307,7 @@ class Display:
             item_num += 1
             d = " " + str(item_num) + ": " + item.get_inv_desc()
             d_length = len(d)
-            d_spaced =  d + (math.floor((inventory_width - d_length)) * " ")
+            d_spaced = d + (math.floor((inventory_width - d_length)) * " ")
             print_list.append("|" + d_spaced + "|")
 
         print_list.append("|" + (" "*inventory_width) + "|")
@@ -368,13 +368,13 @@ def act(command, player):
         else:
             print("you do not have that item in your pockets")
     elif verb == "move":
-        attempt = player.move(target)
+        attempt = player.move(" ".join(filter(lambda x: len(x) > 0, command[1:])))
         if attempt is None:
             print("there is nothing in that direction")
         else:
             event_listener("onEnter", player)
     elif verb == "talk":
-        topic = command[2]
+        topic = " ".join(filter(lambda x: len(x) > 0, command[2:]))
         actor = player.get_actor(target)
         if topic == "":
             if actor is not None:
@@ -405,18 +405,20 @@ def act(command, player):
     # basic interaction types
 
 
+# todo: change print statement to use the display object.
 def event_listener(event_type, player):
     events = player.get_location().get_events()
     for event in events:
         if event.get_type() == event_type:
-            # print(player.getKeys())
-            # print(event.whitelistKeys, event.blacklistKeys)
+            print("keys", player.get_keys())
+            print("whitelist", event.whitelistKeys)
+            print("blacklist", event.blacklistKeys)
 
             if event.check_allowed(player.get_keys()):
-                # print("event activated!")
+                print("event activated!")
                 print(event.activate(player))
-            # else:
-            #     print("no event activated :(")
+            else:
+                print("no event activated :(")
 
 
 def win_condition(player):

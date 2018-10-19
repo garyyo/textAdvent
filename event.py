@@ -27,16 +27,20 @@ class Event:
             name = ref[0]
             class_type = ref[1]
             if class_type == "actor":
-                location.get_actor(name).show()
+                if location.get_actor(name):
+                    location.get_actor(name).show()
             if class_type == "item":
-                location.get_item(name).show()
+                if location.get_item(name):
+                    location.get_item(name).show()
         for ref in self.makeInvisible:
             name = ref[0]
             class_type = ref[1]
             if class_type == "actor":
-                location.get_actor(name).hide()
+                if location.get_actor(name):
+                    location.get_actor(name).hide()
             if class_type == "item":
-                location.get_item(name).hide()
+                if location.get_item(name):
+                    location.get_item(name).hide()
 
         for key in self.giveKeys:
             agent.add_key(key)

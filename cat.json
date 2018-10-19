@@ -39,6 +39,109 @@
           "smell": "",
           "taste": "",
           "pickupable": false,
+          "pickupKey": "",
+          "events": [
+            {
+              "text": "",
+              "type": "onUse",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "makeVisible": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onExamine",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "makeVisible": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onPickup",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "makeVisible": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onDrop",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "makeVisible": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "backgrounds": [
+        {
+          "name":"template",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
           "pickupKey": ""
         }
       ],
@@ -112,7 +215,7 @@
                 "catQuest-clue-orange"
               ],
               "blacklist": [],
-              "key": [],
+              "key": ["catQuest-clue-shadyDude"],
               "unkey": []
             }
           ]
@@ -180,11 +283,10 @@
           ]
         }
       ],
-      "items": [
+      "backgrounds": [
         {
-          "name":"template",
-          "initDesc": "",
-          "invDesc": "",
+          "name":"fountain",
+          "examine": "a large fountain that stands in the center of the town. ",
           "desc": "",
           "weight": 0,
           "smell": "",
@@ -202,8 +304,7 @@
             "fountain-start"
           ],
           "key": [
-            "fountain-start",
-            "catQuest"
+            "fountain-start"
           ],
           "unkey": [],
           "makeVisible": [
@@ -220,7 +321,7 @@
           "direction": "north"
         },
         {
-          "roomName": "market",
+          "roomName": "Market",
           "direction": "south"
         },
         {
@@ -228,7 +329,7 @@
           "direction": "west"
         },
         {
-          "roomName": "babushka_house",
+          "roomName": "Babushka's House",
           "direction": "east"
         }
       ]
@@ -348,36 +449,119 @@
         {
           "roomName": "guild_hall",
           "direction": "east"
+        },
+        {
+          "roomName": "tavern interior",
+          "direction": "tavern interior"
         }
       ]
     },
     {
-      "name": "babushka_house",
+      "name": "tavern interior",
       "initDesc": "",
-      "desc": "",
+      "desc": "a large tavern. several travelers and locals sit around merrily drinking and chatting.",
       "actors": [
         {
-          "name": "",
-          "desc": "",
+          "name": "Bartender",
+          "desc": "A gruff dude",
+          "examine": "A large imposing man, likely acts as security for the tavern, as well as serving drinks.",
           "initDesc": "",
           "dialogues": [
             {
-              "topic": "nothing",
-              "text": "",
+              "topic": "drink",
+              "text": "He slides you a beer that he seemed to already have prepared.\nI'll charge it to your guild account, don't worry I know who you are",
               "whitelist": [],
-              "blacklist": [],
-              "key": [],
+              "blacklist": ["tavern-beer"],
+              "key": ["tavern-beer"],
               "unkey": []
+            }
+          ]
+        }
+      ],
+      "events": [
+        {
+          "text": "The bartender takes a quick glance at you and continues polishing some glasses. \nBartender: You want a drink or what bud?",
+          "type": "onEnter",
+          "whitelist": [],
+          "blacklist": ["tavern-beer"],
+          "key": [],
+          "unkey": []
+        },
+        {
+          "text": "",
+          "type": "active",
+          "whitelist": ["beer"],
+          "blacklist": ["tavern-beer-visible"],
+          "key": ["tavern-beer-visible"],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "beer",
+              "class": "item"
             }
           ]
         }
       ],
       "items": [
         {
-          "name":"template",
+          "name":"beer",
+          "initDesc": "A beer, its for you",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": true,
+          "hidden": "",
+          "pickupKey": ""
+        }
+      ],
+      "links": [
+        {
+          "roomName": "tavern",
+          "direction": "outside"
+        }
+      ]
+    },
+    {
+      "name": "Babushka's House",
+      "initDesc": "",
+      "desc": "A quaint house at the side of town.",
+      "actors": [
+        {
+          "name": "Babushka",
+          "desc": "An old lady that is known around town for making some absolutely great apple pies.",
+          "examine": "An old lady stands before you idly sweeping her front porch. Her walking stick is resting next to the door frame",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "cat",
+              "text": "So you are the fine person sent to help find my cat. Thank you for all your help, she has been missing for a couple days now and I am starting to get worried. I hope nothing has happened to her",
+              "whitelist": [],
+              "blacklist": [],
+              "key": [
+                "catQuest"
+              ]
+            },
+            {
+              "topic": "description",
+              "text": "I cannot say that I am certain, Its been years since I was able to get a good look at her, but I believe she is an orange color. She is also quite tubby, I do try to keep her well fed.",
+              "whitelist": [
+                "catQuest"
+              ],
+              "blacklist": [],
+              "key": ["catQuest-clue-orange"]
+            }
+          ]
+        }
+      ],
+      "backgrounds": [
+        {
+          "name":"walking stick",
           "initDesc": "",
           "invDesc": "",
           "desc": "",
+          "examine": "a walking stick used to help identify objects in front of a person",
           "weight": 0,
           "smell": "",
           "taste": "",
@@ -387,18 +571,10 @@
       ],
       "events": [
         {
-          "text": "",
+          "text": "An old lady turns her head to face you as you enter. \nOh hello, are you new in this town, I don't quite recognize your footsteps",
           "type": "onEnter",
-          "whitelist": [],
-          "blacklist": [],
-          "key": ["win"],
-          "unkey": [],
-          "makeVisible": [
-            {
-              "name": "",
-              "class": ""
-            }
-          ]
+          "blacklist": ["catQuest-babushka-intro"],
+          "key": ["catQuest-babushka-intro"]
         }
       ],
       "links": [
@@ -409,119 +585,27 @@
       ]
     },
     {
-      "name": "market",
+      "name": "Market",
       "initDesc": "",
-      "desc": "",
-      "actors": [
-        {
-          "name": "",
-          "desc": "",
-          "initDesc": "",
-          "dialogues": [
-            {
-              "topic": "nothing",
-              "text": "",
-              "whitelist": [],
-              "blacklist": [],
-              "key": [],
-              "unkey": []
-            }
-          ]
-        }
-      ],
-      "items": [
-        {
-          "name":"template",
-          "initDesc": "",
-          "invDesc": "",
-          "desc": "",
-          "weight": 0,
-          "smell": "",
-          "taste": "",
-          "pickupable": false,
-          "pickupKey": ""
-        }
-      ],
-      "events": [
-        {
-          "text": "",
-          "type": "onEnter",
-          "whitelist": [],
-          "blacklist": [],
-          "key": [],
-          "unkey": [],
-          "makeVisible": [
-            {
-              "name": "",
-              "class": ""
-            }
-          ]
-        }
-      ],
+      "desc": "A bustling market in the middle of the town. There isn't much of interest here",
       "links": [
         {
           "roomName": "fountain",
           "direction": "north"
         },
         {
-          "roomName": "south_gate",
+          "roomName": "South Gate",
           "direction": "south"
         }
       ]
     },
     {
-      "name": "south_gate",
+      "name": "South Gate",
       "initDesc": "",
-      "desc": "",
-      "actors": [
-        {
-          "name": "",
-          "desc": "",
-          "initDesc": "",
-          "dialogues": [
-            {
-              "topic": "nothing",
-              "text": "",
-              "whitelist": [],
-              "blacklist": [],
-              "key": [],
-              "unkey": []
-            }
-          ]
-        }
-      ],
-      "items": [
-        {
-          "name":"template",
-          "initDesc": "",
-          "invDesc": "",
-          "desc": "",
-          "weight": 0,
-          "smell": "",
-          "taste": "",
-          "pickupable": false,
-          "pickupKey": ""
-        }
-      ],
-      "events": [
-        {
-          "text": "",
-          "type": "onEnter",
-          "whitelist": [],
-          "blacklist": [],
-          "key": [],
-          "unkey": [],
-          "makeVisible": [
-            {
-              "name": "",
-              "class": ""
-            }
-          ]
-        }
-      ],
+      "desc": "The south gate. permanently closed for security. you wonder why they even have a gate here if it is never open",
       "links": [
         {
-          "roomName": "market",
+          "roomName": "Market",
           "direction": "north"
         }
       ]

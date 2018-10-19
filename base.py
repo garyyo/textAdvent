@@ -31,7 +31,7 @@ class Room:
 
     def get_items_index(self, item_name: str) -> int:
         for i in range(len(self.items)):
-            if self.items[i].name == item_name:
+            if self.items[i].get_name().lower() == item_name:
                 return i
 
     def get_item_ref(self, index):
@@ -55,13 +55,13 @@ class Room:
 
     def get_actor(self, actor_name):
         for actor in self.actors:
-            if actor.get_name() == actor_name and actor.get_visible():
+            if actor.get_name().lower() == actor_name and actor.get_visible():
                 return actor
         return None
 
     def get_item(self, item_name):
         for item in self.items:
-            if item.get_name() == item_name:
+            if item.get_name().lower() == item_name:
                 return item
         return None
 

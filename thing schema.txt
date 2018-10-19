@@ -1,0 +1,60 @@
+room:
+    name: unique identifier
+    desc: a short description of the room
+    actors: list of actors
+    items: list of items
+    background: list of background items
+    events: list of event
+        onEnter
+        active
+    links: list of links
+
+actors:
+    name
+    desc
+    dialogues
+    hidden: if this exists the item is marked as hidden. doesnt matter whats in it
+
+items:
+    name
+    desc
+    invDesc: description while in inventory
+    examine: deprecated, use onExamine event instead
+    weight
+    smell
+    taste
+    pickupable: might be deprecated
+    events:
+        onUse
+        onExamine
+        onPickup
+        onDrop
+    hidden: if this exists the item is marked as hidden. doesnt matter whats in it
+
+backgrounds:
+    name
+    desc
+    events:
+        onUse
+        onExamine
+    hidden: if this exists the item is marked as hidden. doesnt matter whats in it
+
+event:
+    text: text to print out when event is triggered
+    type: type of event, depends on where the event is
+    whitelist: player must have tags in this list, if list is not empty
+    blacklist: player cannot have tags in this list
+    key: gives a key to player
+    unkey: takes a key from player if exists
+    makeVisible: will change to show/hide
+        name: name of thing to make visible
+        class: what type of object, just to know which list to search
+
+dialogues: very similar to event...
+
+    text: text to print out when event is triggered
+    type: type of event, depends on where the event is
+    whitelist: player must have tags in this list, if list is not empty
+    blacklist: player cannot have tags in this list
+    key: gives a key to player
+    unkey: takes a key from player if exists
