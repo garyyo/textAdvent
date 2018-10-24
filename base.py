@@ -55,7 +55,7 @@ class Room:
 
     def get_actor(self, actor_name):
         for actor in self.actors:
-            if actor.get_name().lower() == actor_name and actor.get_visible():
+            if actor.get_name().lower() == actor_name.lower() and actor.get_visible():
                 return actor
         return None
 

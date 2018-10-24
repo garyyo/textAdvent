@@ -50,7 +50,7 @@ more scenarios, at 4
 get player model data. at least based on how many times user does an action. get scenarios that
 implement looking at items, and getting keys from that.
 when to offer the quest: when the player gets bored
-    when the players boredom stat goes below some thershold
+    when the players boredom stat goes below some threshold
 how does it look like to offer the quest
     how do you make the player know there is an alternative without being too disruptive
 how to choose the quest to offer.

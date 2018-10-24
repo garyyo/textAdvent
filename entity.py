@@ -1,40 +1,8 @@
 from __future__ import annotations
 from typing import List, Dict
+from event import *
 
 
-class Dialogue:
-    topic: str
-    text: str
-    whitelistKeys: List[str]
-    blacklistKeys: List[str]
-    giveKeys: List[str]
-    takeKeys: List[str]
-
-    def __init__(self, topic, text, whitelist, blacklist, key, unkey):
-        self.topic = topic
-        self.text = text
-        self.whitelistKeys = whitelist
-        self.blacklistKeys = blacklist
-        self.giveKeys = key
-        self.takeKeys = unkey
-
-    def check_allowed(self, keys):
-        for key in self.whitelistKeys:
-            if key not in keys:
-                return False
-        for key in keys:
-            if key in self.blacklistKeys:
-                return False
-        return True
-
-    def get_topic(self):
-        return self.topic
-
-    def get_text(self):
-        return self.text
-
-    def get_keys(self):
-        return self.giveKeys, self.takeKeys
 
 
 class Entity:
@@ -152,6 +120,7 @@ class Actor(Entity):
         self.dialogueList[chat.get_topic()] = chat
         pass
 
+    # todo: move to Dialogue class instead of in entity class
     def get_topics(self, keys):
         return_string = ""
         for chatKey, chatEntry in self.dialogueList.items():
@@ -162,6 +131,13 @@ class Actor(Entity):
         return_string = "Topics:\n" + return_string
         return return_string
 
+    def get_topics_list(self, keys):
+        return_list = []
+        for chatKey, chatEntry in self.dialogueList.items():
+            if chatEntry.check_allowed(keys):
+                return_list.append(chatEntry)
+        return return_list
+
     def check_topic(self, topic, keys):
         if topic in self.dialogueList:
             return self.dialogueList[topic].check_allowed(keys)
@@ -169,7 +145,7 @@ class Actor(Entity):
 
     def speak_topic(self, topic):
         if topic in self.dialogueList:
-            return self.dialogueList[topic].get_text()
+            return self.dialogueList[topic].activate()
         return ""
 
     def give_dialogue_keys(self, topic):

@@ -7,7 +7,7 @@ class Event:
     blacklistKeys: List[str]
     giveKeys: List[str]
     takeKeys: List[str]
-    eventType: str
+    type: str
     makeVisible: []
     makeInvisible: []
 
@@ -16,8 +16,8 @@ class Event:
         self.blacklistKeys = blacklist
         self.giveKeys = key
         self.takeKeys = unkey
-        self.eventText = event_text
-        self.eventType = event_type
+        self.text = event_text
+        self.type = event_type
         self.makeVisible = []
         self.makeInvisible = []
 
@@ -47,7 +47,7 @@ class Event:
         for key in self.takeKeys:
             agent.remove_key(key)
 
-        return self.eventText
+        return self.text
 
     def check_allowed(self, keys):
         if self.whitelistKeys:
@@ -61,7 +61,7 @@ class Event:
         return True
 
     def get_type(self):
-        return self.eventType
+        return self.type
 
     def get_keys(self):
         return self.giveKeys, self.takeKeys
@@ -79,3 +79,14 @@ class Event:
         return self.makeInvisible
 
 # todo: dialogue extends event?
+
+
+class Dialogue(Event):
+    def __init__(self, whitelist, blacklist, key, unkey, text, topic):
+        Event.__init__(self, whitelist, blacklist, key, unkey, text, topic)
+
+    def get_topic(self):
+        return self.type
+
+    def activate(self):
+        return self.text

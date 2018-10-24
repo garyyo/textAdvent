@@ -72,6 +72,7 @@ class Parser:
 
     def identify_object(self, verb):
         direct_object = self.commandList[1]
+        # based on verb do different things
         if verb == "move":
             if direct_object == "n":
                 direct_object = "north"
@@ -85,7 +86,17 @@ class Parser:
                 direct_object = "up"
             if direct_object == "d":
                 direct_object = "down"
-        # based on verb do different things
+
+        # if player misspelled actor name
+        if verb == "talk" and direct_object:
+            actor = self.player.get_location().get_actor(direct_object)
+            topic = self.commandList[2]
+            if actor is None:
+                direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_list(), 0.7)
+                actor = self.player.get_location().get_actor(direct_object)
+            if actor and not actor.check_topic(topic, self.player.get_keys()):
+                topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
+            self.commandList[2] = topic
         return direct_object
 
     def collect_entity_list(self):
@@ -105,6 +116,46 @@ class Parser:
         for inventoryItem in inventory_list:
             return_list += self.collect_entities_from_entity(inventoryItem)
         return return_list
+
+    @staticmethod
+    def sp_entity_name(word, entity_list: List[Entity], threshold):
+        # find closest actor name
+        if not word:
+            return ""
+        correct_list = {}
+        for entity in entity_list:
+            entity_name = entity.get_name()
+            character_length = min(len(entity_name), len(word))
+            counter = 0
+            for i in range(character_length):
+                counter += 1 if entity_name.lower()[i] == word.lower()[i] else 0
+                correct_list[entity_name] = counter/character_length
+        if not correct_list:
+            return word
+        key = max(correct_list, key=lambda x: correct_list[x])
+        if correct_list[key] > threshold:
+            word = key
+        return word
+
+    @staticmethod
+    def sp_event_name(word, event_list: List[Event], threshold):
+        # find closest actor name
+        if not word:
+            return ""
+        correct_list = {}
+        for event in event_list:
+            event_name = event.get_type()
+            character_length = min(len(event_name), len(word))
+            counter = 0
+            for i in range(character_length):
+                counter += 1 if event_name.lower()[i] == word.lower()[i] else 0
+                correct_list[event_name] = counter/character_length
+        if not correct_list:
+            return word
+        key = max(correct_list, key=lambda x: correct_list[x])
+        if correct_list[key] > threshold:
+            word = key
+        return word
 
     # strip commandList of unnecessary words?
     def strip_commands(self):
@@ -208,13 +259,12 @@ class Scenario:
         if "dialogues" in actor_json:
             for dialogueJSON in actor_json["dialogues"]:
                 new_actor.add_dialogue(
-                    Dialogue(dialogueJSON["topic"] if "topic" in dialogueJSON else "",
-                             dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
-                             dialogueJSON["whitelist"] if "whitelist" in dialogueJSON else "",
+                    Dialogue(dialogueJSON["whitelist"] if "whitelist" in dialogueJSON else "",
                              dialogueJSON["blacklist"] if "blacklist" in dialogueJSON else "",
                              dialogueJSON["key"] if "key" in dialogueJSON else "",
-                             dialogueJSON["unkey"] if "unkey" in dialogueJSON else ""
-                             )
+                             dialogueJSON["unkey"] if "unkey" in dialogueJSON else "",
+                             dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
+                             dialogueJSON["topic"] if "topic" in dialogueJSON else "")
                 )
 
         self.actorList.append(new_actor)
@@ -292,7 +342,8 @@ class Display:
 
     def confirm_command(self, command):
         # if inventory command, display inventory in a nicely formatted manner.
-
+        # command switch
+        # if command == "pickup":
         pass
 
     def inventory(self):
@@ -384,6 +435,8 @@ def act(command, player):
         else:
             if actor is not None:
                 print(player.talk(actor, topic))
+                print("")
+                print(actor.get_topics(player.get_keys()))
                 print("")
             else:
                 print("you talk into the aether to someone who isn't there")
