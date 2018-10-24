@@ -24,7 +24,8 @@ class Room:
         self.events = []
 
     def add_item(self, item):
-        self.items.append(item)
+        if item:
+            self.items.append(item)
 
     def remove_item(self, index: int):
         return self.items.pop(index)
@@ -46,12 +47,12 @@ class Room:
     def get_desc(self):
         return self.description
 
-
     def add_link(self, location, direction):
         self.links.append(Link(location, direction))
 
-    def add_actor(self, person):
-        self.actors.append(person)
+    def add_actor(self, actor):
+        if actor:
+            self.actors.append(actor)
 
     def get_actor(self, actor_name):
         for actor in self.actors:
@@ -154,15 +155,6 @@ class Player:
 
     def get_keys(self):
         return self.keyList
-
-    def display_inventory(self):
-        return_string = BColors.OKGREEN + "You have on you: \n" + BColors.ENDC
-        if len(self.inventory) == 0:
-            return "you feel sad, for there is nothing in your pockets. "
-        for thing in self.inventory:
-            return_string += thing.get_inv_desc()
-            return_string += "\n"
-        return return_string
 
     def move(self, direction):
         links = self.location.get_links()

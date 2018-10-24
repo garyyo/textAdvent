@@ -88,5 +88,5 @@ class Dialogue(Event):
     def get_topic(self):
         return self.type
 
-    def activate(self):
+    def activate(self, player=None):
         return self.text

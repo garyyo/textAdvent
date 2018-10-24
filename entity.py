@@ -1,8 +1,6 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import *
 from event import *
-
-
 
 
 class Entity:
