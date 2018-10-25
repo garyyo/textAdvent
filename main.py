@@ -33,7 +33,8 @@ class Parser:
         "direction": ["north", "south", "east", "west", "up", "down", "left", "right",
                       "n", "s", "e", "w", "u", "d", "l", "r"],
         "look": ["look", "examine"],
-        "talk": ["talk", "speak"],
+        "use": ["use"],
+        "talk": ["talk", "speak", "t"],
         "inventory": ["inv", "inventory"],
         "key": ["key", "k"]
     }
@@ -90,7 +91,7 @@ class Parser:
         # if player misspelled actor name
         if verb == "talk" and direct_object:
             actor = self.player.get_location().get_actor(direct_object)
-            topic = self.commandList[2]
+            topic = " ".join(filter(lambda x: len(x) > 0, self.commandList[2:]))
             if actor is None:
                 direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_list(), 0.7)
                 actor = self.player.get_location().get_actor(direct_object)
@@ -137,6 +138,7 @@ class Parser:
             word = key
         return word
 
+    # todo: verify this works properly with multi word topics
     @staticmethod
     def sp_event_name(word, event_list: List[Event], threshold):
         # find closest actor name
@@ -181,7 +183,7 @@ class ScenarioBuilder:
     def __init__(self):
         self.scenarioList = []
         # self.playerModel = [0.51087279, 0.22050487, 0.4063116, 0.713533420, 0.08517401]
-        self.playerModel = [0]
+        self.playerModel = [0, 0, 0, 0, 0]
         self.build_scenarios(["cat.json", "example.json"])
         pass
 
@@ -195,6 +197,22 @@ class ScenarioBuilder:
         scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel)))
         self.scenarioList.remove(scene)
         return scene
+
+    def update_model(self, command_array):
+        action = command_array[0]
+        if action == "talk":
+            self.playerModel[0] = (self.playerModel[0] + 1)/2
+        if action == "move":
+            self.playerModel[1] = (self.playerModel[1] + 1)/2
+        if action == "pickup":
+            self.playerModel[2] = (self.playerModel[2] + 1)/2
+        if action == "look":
+            self.playerModel[3] = (self.playerModel[3] + 1)/2
+        if action == "use":
+            self.playerModel[4] = (self.playerModel[4] + 1)/2
+
+    def print_model(self):
+        print(self.playerModel)
 
 
 class Scenario:
@@ -253,6 +271,8 @@ class Scenario:
             actor_json["initDesc"] if "initDesc" in actor_json else "",
             actor_json["desc"] if "desc" in actor_json else ""
         )
+        if new_actor.get_name() == "":
+            return None
         if "hidden" in actor_json:
             new_actor.hide()
 
@@ -375,11 +395,11 @@ class Display:
         print_list = []
         actor_list = self.player.get_location().get_actors_list()
         if len(actor_list) > 0:
-            print_list.append(BColors.OKGREEN + "There is someone here:" + BColors.ENDC)
+            print_list.append(self.color_text("There is someone here:", "green"))
             for actor in actor_list:
-                print_list.append("\t" + actor.get_name() + ": " + actor.get_desc())
+                print_list.append("\t" + self.color_text(actor.get_name(), "yellow") + ": " + actor.get_desc())
         else:
-            print_list.append("You are alone")
+            print_list.append(self.color_text("You are alone", "green"))
         print("\n".join(print_list))
         return print_list
 
@@ -387,12 +407,12 @@ class Display:
         print_list = []
         item_list = self.player.get_location().get_item_list()
         if len(item_list) > 0:
-            print_list.append("There is something here:")
+            print_list.append(self.color_text("There is something here:", "green"))
             for item in item_list:
                 if item.get_visible():
                     print_list.append("\t" + item.get_name() + ": " + item.get_desc())
         else:
-            print_list.append("There is nothing here")
+            print_list.append(self.color_text("There is nothing here", "green"))
         print("\n".join(print_list))
         return print_list
 
@@ -400,13 +420,22 @@ class Display:
         print_list = []
         link_list = self.player.get_location().get_links()
         if len(link_list) > 0:
-            print_list.append("There are places to go:")
+            print_list.append(self.color_text("There are places to go:", "green"))
             for link in link_list:
                 print_list.append("\t" + link.get_direction() + ": " + link.get_room_name())
         else:
-            print_list.append("There is nowhere to go")
+            print_list.append(self.color_text("There is nowhere to go", "green"))
         print("\n".join(print_list))
         return print_list
+
+    @staticmethod
+    def color_text(text, color):
+        if color == "green":
+            return BColors.OKGREEN + text + BColors.ENDC
+        if color == "red":
+            return BColors.FAIL + text + BColors.ENDC
+        if color == "yellow":
+            return BColors.WARNING + text + BColors.ENDC
 
 
 def act(command, player):
@@ -433,7 +462,7 @@ def act(command, player):
         else:
             event_listener("onEnter", player)
     elif verb == "talk":
-        topic = " ".join(filter(lambda x: len(x) > 0, command[2:]))
+        topic = command[2]
         actor = player.get_actor(target)
         if topic == "":
             if actor is not None:
@@ -471,15 +500,16 @@ def event_listener(event_type, player):
     events = player.get_location().get_events()
     for event in events:
         if event.get_type() == event_type:
-            print("keys", player.get_keys())
-            print("whitelist", event.whitelistKeys)
-            print("blacklist", event.blacklistKeys)
+            # print("keys", player.get_keys())
+            # print("whitelist", event.whitelistKeys)
+            # print("blacklist", event.blacklistKeys)
 
             if event.check_allowed(player.get_keys()):
-                print("event activated!")
+                # print("event activated!")
                 print(event.activate(player))
             else:
-                print("no event activated :(")
+                # print("no event activated :(")
+                pass
 
 
 def win_condition(player):
@@ -504,10 +534,10 @@ def main():
     #       "inv\n")
     # time.sleep(5)
 
-    dungeon_master = ScenarioBuilder()
+    dm = ScenarioBuilder()
 
     while True:
-        scene = dungeon_master.choose_scenario()
+        scene = dm.choose_scenario()
         if scene is None:
             print("you won the game! congrats.")
             exit(1)
@@ -529,9 +559,12 @@ def main():
             command = input("> ")
             command_array = parser.parse_commands(command)
 
+            dm.update_model(command_array)
+            dm.print_model()
             # interpret input
             # command_array = parseInput(command, player)
             # act on input and display
+
             act(command_array, player)
             event_listener("active", player)
             # postAct(command_array, player)
