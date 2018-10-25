@@ -330,13 +330,17 @@ class Display:
         self.player = player
         pass
 
+    def print_from_list(self, print_list_list):
+        for print_list in print_list_list:
+            for line in print_list:
+                print(line)
+            print()
+
     def display_room(self):
-        self.link_list()
-        print()
-        self.actor_list()
-        print()
-        self.item_list()
-        print()
+        print_list_list = []
+        print_list_list.append(self.link_list())
+        print_list_list.append(self.actor_list())
+        print_list_list.append(self.item_list())
 
         pass
 
@@ -365,6 +369,7 @@ class Display:
         print_list.append("=" + ("-"*inventory_width) + "=")
 
         print("\n".join(print_list))
+        return print_list
 
     def actor_list(self):
         print_list = []
@@ -376,6 +381,7 @@ class Display:
         else:
             print_list.append("You are alone")
         print("\n".join(print_list))
+        return print_list
 
     def item_list(self):
         print_list = []
@@ -388,6 +394,7 @@ class Display:
         else:
             print_list.append("There is nothing here")
         print("\n".join(print_list))
+        return print_list
 
     def link_list(self):
         print_list = []
@@ -399,6 +406,7 @@ class Display:
         else:
             print_list.append("There is nowhere to go")
         print("\n".join(print_list))
+        return print_list
 
 
 def act(command, player):

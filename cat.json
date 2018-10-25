@@ -337,11 +337,11 @@
     {
       "name": "guild_hall",
       "initDesc": "",
-      "desc": "",
+      "desc": "The guild hall stands tall before you. One of the few buildings in town made purely from stone, looks like these guys are pretty rich",
       "actors": [
         {
-          "name": "",
-          "desc": "",
+          "name": "Bron",
+          "desc": "Its the guild master. He ",
           "initDesc": "",
           "dialogues": [
             {
