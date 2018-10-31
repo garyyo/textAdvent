@@ -130,11 +130,7 @@ class Actor(Entity):
         return return_string
 
     def get_topics_list(self, keys):
-        return_list = []
-        for chatKey, chatEntry in self.dialogueList.items():
-            if chatEntry.check_allowed(keys):
-                return_list.append(chatEntry)
-        return return_list
+        return {k: v for k, v in self.dialogueList.items() if v.check_allowed(keys)}
 
     def check_topic(self, topic, keys):
         if topic in self.dialogueList:

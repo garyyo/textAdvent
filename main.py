@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import math
+from pprint import pprint
 
 from base import *
 from typing import List, Dict
@@ -96,7 +97,7 @@ class Parser:
                 direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_list(), 0.7)
                 actor = self.player.get_location().get_actor(direct_object)
             if actor and not actor.check_topic(topic, self.player.get_keys()):
-                topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
+                topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()).items(), .4)
             self.commandList[2] = topic
         return direct_object
 
@@ -146,6 +147,7 @@ class Parser:
             return ""
         correct_list = {}
         for event in event_list:
+            pprint(event)
             event_name = event.get_type()
             character_length = min(len(event_name), len(word))
             counter = 0
@@ -344,6 +346,7 @@ class Scenario:
 
 class Display:
     player: Player
+    display_width = 50
 
     # pass in arbitrary objects and get proper formatting for their description.
     def __init__(self, player):
@@ -353,7 +356,10 @@ class Display:
     def print_from_list(self, print_list_list):
         for print_list in print_list_list:
             for line in print_list:
-                print(line)
+                while len(line) > 0:
+                    print(line[:self.display_width])
+                    line = line[self.display_width:]
+                # print(line)
             print()
 
     def display_room(self):
@@ -364,11 +370,36 @@ class Display:
 
         pass
 
-    def confirm_command(self, command):
-        # if inventory command, display inventory in a nicely formatted manner.
-        # command switch
-        # if command == "pickup":
+    def confirm_command(self, text: str, status: bool=True, command: str=None, args: List[str]=None):
+        print()
+        # if status is false
+        #   print in red because an action failed
+        if not status:
+            print(self.color_text(text,"red"))
+            print()
+            return
+
+        # types interpreted from command???: multiline, confirmation,
+        if command == "topics":
+            pass
+        # command and args are only to be used in very specific cases, like topic listing.
+        # i still want everything to be routed through this function.
+
+        #
+
         pass
+
+    def topics_list(self,actor):
+        topics_list = actor.get_topics_list(self.player.get_keys())
+        print_list = []
+
+        for chatKey, chatEntry in topics_list.items():
+            print_list.append("\t" + self.color_text(chatEntry.get_topic(),"yellow"))
+        if print_list == "":
+            print_list.append(self.color_text("They don't want to talk.","red"))
+        else:
+            print_list.insert(0, self.color_text(actor.get_name(), "blue") + " can talk about: ")
+        self.print_from_list([print_list])
 
     def inventory(self):
         if not self.player.get_inventory():
@@ -410,9 +441,9 @@ class Display:
             print_list.append(self.color_text("There is something here:", "green"))
             for item in item_list:
                 if item.get_visible():
-                    print_list.append("\t" + item.get_name() + ": " + item.get_desc())
+                    print_list.append("\t" + self.color_text(item.get_name(), "yellow") + ": " + item.get_desc())
         else:
-            print_list.append(self.color_text("There is nothing here", "green"))
+            print_list.append(self.color_text("There is nothing of interest here", "green"))
         print("\n".join(print_list))
         return print_list
 
@@ -422,7 +453,7 @@ class Display:
         if len(link_list) > 0:
             print_list.append(self.color_text("There are places to go:", "green"))
             for link in link_list:
-                print_list.append("\t" + link.get_direction() + ": " + link.get_room_name())
+                print_list.append("\t" + self.color_text(link.get_direction(), "yellow") + ": " + link.get_room_name())
         else:
             print_list.append(self.color_text("There is nowhere to go", "green"))
         print("\n".join(print_list))
@@ -436,9 +467,12 @@ class Display:
             return BColors.FAIL + text + BColors.ENDC
         if color == "yellow":
             return BColors.WARNING + text + BColors.ENDC
+        if color == "blue":
+            return BColors.OKBLUE + text + BColors.ENDC
+        return text
 
 
-def act(command, player):
+def act(command, player, display):
     # do verb on object
     verb = command[0]
     target = command[1]
@@ -448,35 +482,32 @@ def act(command, player):
         if attempt is not None:
             print("you have picked up", target)
         else:
-            print("you cannot pick that up")
+            display.confirm_command("you cannot pick that up", False)
     elif verb == "drop":
         attempt = player.drop(target)
         if attempt is not None:
             print("you have dropped", target)
         else:
-            print("you do not have that item in your pockets")
+            display.confirm_command("you do not have that item in your pockets",False)
     elif verb == "move":
         attempt = player.move(" ".join(filter(lambda x: len(x) > 0, command[1:])))
         if attempt is None:
-            print("there is nothing in that direction")
+            display.confirm_command("there is nothing in that direction",False)
         else:
             event_listener("onEnter", player)
     elif verb == "talk":
         topic = command[2]
         actor = player.get_actor(target)
-        if topic == "":
-            if actor is not None:
-                print(actor.get_topics(player.get_keys()))
+        if actor is not None:
+            if topic == "":
+                display.topics_list(actor)
             else:
-                print("you talk into the aether to someone who isn't there")
-        else:
-            if actor is not None:
                 print(player.talk(actor, topic))
                 print("")
-                print(actor.get_topics(player.get_keys()))
+                display.topics_list(actor)
                 print("")
-            else:
-                print("you talk into the aether to someone who isn't there")
+        else:
+            display.confirm_command("you talk into the aether to someone who isn't there",False)
     elif verb == "inventory":
         pass
     elif verb == "look":
@@ -490,7 +521,7 @@ def act(command, player):
     elif verb == "key":
         print(player.get_keys())
     else:
-        print("I do not understand that command")
+        display.confirm_command("I do not understand that command",False)
 
     # basic interaction types
 
@@ -565,7 +596,7 @@ def main():
             # command_array = parseInput(command, player)
             # act on input and display
 
-            act(command_array, player)
+            act(command_array, player, display)
             event_listener("active", player)
             # postAct(command_array, player)
 

@@ -49,6 +49,7 @@ event:
     makeVisible: will change to show/hide
         name: name of thing to make visible
         class: what type of object, just to know which list to search
+            actor, link, item
 
 dialogues: very similar to event...
 

@@ -184,10 +184,24 @@ class Link:
     # room
     direction: str
     location: Room
+    visible: bool
 
     def __init__(self, location, direction):
         self.location = location
         self.direction = direction
+        self.visible = True
+
+    def get_visible(self):
+        return self.visible
+
+    def set_visible(self,visibility):
+        self.visible = visibility
+
+    def hide(self):
+        self.visible = False
+
+    def show(self):
+        self.visible = True
 
     def get_room_name(self):
         return self.location.get_name()

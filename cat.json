@@ -341,12 +341,12 @@
       "actors": [
         {
           "name": "Bron",
-          "desc": "Its the guild master. He ",
+          "desc": "Its the guild master. He masters the guild.",
           "initDesc": "",
           "dialogues": [
             {
-              "topic": "nothing",
-              "text": "",
+              "topic": "old lady",
+              "text": "You looking for the old lady? Her house is two blocks east of here",
               "whitelist": [],
               "blacklist": [],
               "key": [],
@@ -438,6 +438,12 @@
           "key": [],
           "unkey": [],
           "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ],
+          "makeInvisible": [
             {
               "name": "",
               "class": ""

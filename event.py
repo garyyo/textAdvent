@@ -41,6 +41,10 @@ class Event:
             if class_type == "item":
                 if location.get_item(name):
                     location.get_item(name).hide()
+            if class_type == "link":
+                link = filter(lambda x: x.get_room_name() == name,location.get_links())[0]
+                if link:
+                    link.hide()
 
         for key in self.giveKeys:
             agent.add_key(key)
