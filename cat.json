@@ -475,7 +475,32 @@
           "dialogues": [
             {
               "topic": "drink",
-              "text": "He slides you a beer that he seemed to already have prepared.\nI'll charge it to your guild account, don't worry I know who you are",
+              "text": "I'll charge it to your guild account, don't worry I know who you are \nHe slides you a beer that he seemed to already have prepared.",
+              "whitelist": [],
+              "blacklist": ["tavern-beer"],
+              "key": ["tavern-beer"],
+              "unkey": []
+            },
+            {
+              "topic": "spooky dude",
+              "text": "You mean that guy over there?",
+              "whitelist": [],
+              "blacklist": [],
+              "key": ["spooky-dude"],
+              "unkey": []
+            }
+          ]
+        },
+
+        {
+          "name": "spooky dude",
+          "desc": "a dude sitting in the corner, almost invisible",
+          "examine": "a truly spooky dude.",
+          "initDesc": "",
+          "dialogues": [
+            {
+              "topic": "cat",
+              "text": "Why you asking me bud?",
               "whitelist": [],
               "blacklist": ["tavern-beer"],
               "key": ["tavern-beer"],
@@ -504,6 +529,20 @@
             {
               "name": "beer",
               "class": "item"
+            }
+          ]
+        },
+        {
+          "text": "You notice that there is in fact a spooky dude sitting in the corner.",
+          "type": "active",
+          "whitelist": ["spooky-dude"],
+          "blacklist": ["spooky-dude-visible"],
+          "key": ["spooky-dude-visible"],
+          "unkey": [],
+          "makeVisible": [
+            {
+              "name": "spooky dude",
+              "class": "actor"
             }
           ]
         }

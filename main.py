@@ -99,6 +99,8 @@ class Parser:
             if actor and not actor.check_topic(topic, self.player.get_keys()):
                 topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
             self.commandList[2] = topic
+        if verb == "move":
+            direct_object = self.sp_link_name(direct_object, self.player.get_location().get_links(), 0.7)
         return direct_object
 
     def collect_entity_list(self):
@@ -131,7 +133,27 @@ class Parser:
             counter = 0
             for i in range(character_length):
                 counter += 1 if entity_name.lower()[i] == word.lower()[i] else 0
-                correct_list[entity_name] = counter/character_length
+                correct_list[entity_name] = counter / character_length
+        if not correct_list:
+            return word
+        key = max(correct_list, key=lambda x: correct_list[x])
+        if correct_list[key] > threshold:
+            word = key
+        return word
+
+    @staticmethod
+    def sp_link_name(word, link_list: List[Link], threshold):
+        # find closest actor name
+        if not word:
+            return ""
+        correct_list = {}
+        for link in link_list:
+            link_name = link.get_direction()
+            character_length = min(len(link_name), len(word))
+            counter = 0
+            for i in range(character_length):
+                counter += 1 if link_name.lower()[i] == word.lower()[i] else 0
+                correct_list[link_name] = counter / character_length
         if not correct_list:
             return word
         key = max(correct_list, key=lambda x: correct_list[x])
@@ -141,7 +163,7 @@ class Parser:
 
     # todo: verify this works properly with multi word topics
     @staticmethod
-    def sp_event_name(word, event_list: List[Event], threshold):
+    def sp_event_name(word, event_list, threshold):
         # find closest actor name
         if not word:
             return ""
@@ -216,7 +238,7 @@ class ScenarioBuilder:
             if input("you look bored would you like to play something different?") in yes_list:
                 return True
             else:
-                self.reset_model
+                self.reset_model()
                 return False
 
         pass
@@ -381,8 +403,8 @@ class Display:
         for print_list in print_list_list:
             for line in print_list:
                 while len(line) > 0:
-                    print(line[:self.display_width])
-                    line = line[self.display_width:]
+                    print_line, line = self.break_text(line)
+                    print(print_line)
                 # print(line)
             print()
 
@@ -394,8 +416,11 @@ class Display:
 
         pass
 
-    def talk(self, text):
-        self.print_from_list([[text]])
+    def talk(self, actor, topic):
+        if not actor.check_topic(topic, self.player.get_keys()):
+            self.print_from_list([[actor.get_name() + " does not know about this topic."]])
+            return
+        self.print_from_list([[actor.get_name() + ": " + actor.speak_topic(topic)]])
 
     def confirm_command(self, text: str, status: bool=True, command: str=None, args: List[str]=None):
         print()
@@ -407,8 +432,6 @@ class Display:
             return
 
         # types interpreted from command???: multiline, confirmation,
-        if command == "topics":
-            pass
         # command and args are only to be used in very specific cases, like topic listing.
         # i still want everything to be routed through this function.
 
@@ -498,8 +521,21 @@ class Display:
             return BColors.OKBLUE + text + BColors.ENDC
         return text
 
+    def break_text(self, text):
+        # search for a space from self.display_width backwards
+        if len(text) < self.display_width:
+            return text, ""
+        if "\n" in text[:self.display_width]:
+            index = text[:self.display_width + 1].rfind("\n")
+            print_text = text[:index].strip()
+        else:
+            index = text[:self.display_width+1].rfind(" ")
+            print_text = text[:index].strip()
+        line = text[index+1:]
+        return print_text, line
 
-def act(command, player, display):
+
+def act(command, player:Player, display: Display):
     # do verb on object
     verb = command[0]
     target = command[1]
@@ -526,13 +562,10 @@ def act(command, player, display):
         topic = command[2]
         actor = player.get_actor(target)
         if actor is not None:
-            if topic == "":
-                display.topics_list(actor)
-            else:
-                display.talk(player.talk(actor, topic))
-                print("")
-                display.topics_list(actor)
-                print("")
+            if topic != "":
+                display.talk(actor, topic)
+                player.talk(actor, topic)
+            display.topics_list(actor)
         else:
             display.confirm_command("you talk into the aether to someone who isn't there",False)
     elif verb == "inventory":

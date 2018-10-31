@@ -169,15 +169,12 @@ class Player:
 
     def talk(self, actor, topic):
         if not actor.check_topic(topic, self.get_keys()):
-            return actor.get_name() + " does not know about this."
-        return_string = actor.get_name() + ": " + actor.speak_topic(topic)
+            return
         give_keys, take_keys = actor.give_dialogue_keys(topic)
         for key in give_keys:
             self.add_key(key)
         for key in take_keys:
             self.remove_key(key)
-
-        return return_string
 
 
 class Link:
