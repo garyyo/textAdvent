@@ -51,7 +51,7 @@ event:
         class: what type of object, just to know which list to search
             actor, link, item
 
-dialogues: very similar to event...
+dialogues: very similar to event... now extends event
 
     text: text to print out when event is triggered
     type: type of event, depends on where the event is

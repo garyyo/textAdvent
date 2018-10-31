@@ -82,8 +82,6 @@ class Event:
     def get_make_invisible(self):
         return self.makeInvisible
 
-# todo: dialogue extends event?
-
 
 class Dialogue(Event):
     def __init__(self, whitelist, blacklist, key, unkey, text, topic):

@@ -118,7 +118,7 @@ class Actor(Entity):
         self.dialogueList[chat.get_topic()] = chat
         pass
 
-    # todo: move to Dialogue class instead of in entity class
+    # todo: move to Display class instead of in entity class
     def get_topics(self, keys):
         return_string = ""
         for chatKey, chatEntry in self.dialogueList.items():

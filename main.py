@@ -97,7 +97,7 @@ class Parser:
                 direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_list(), 0.7)
                 actor = self.player.get_location().get_actor(direct_object)
             if actor and not actor.check_topic(topic, self.player.get_keys()):
-                topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()).items(), .4)
+                topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
             self.commandList[2] = topic
         return direct_object
 
@@ -146,9 +146,8 @@ class Parser:
         if not word:
             return ""
         correct_list = {}
-        for event in event_list:
-            pprint(event)
-            event_name = event.get_type()
+
+        for event_name in event_list:
             character_length = min(len(event_name), len(word))
             counter = 0
             for i in range(character_length):
@@ -181,6 +180,7 @@ class Parser:
 class ScenarioBuilder:
     scenarioList: List[Scenario]
     playerModel: List[float]
+    currentScene: Scenario
 
     def __init__(self):
         self.scenarioList = []
@@ -193,25 +193,49 @@ class ScenarioBuilder:
         for file in file_list:
             self.scenarioList.append(Scenario(file))
 
+    def get_scenario(self):
+        self.currentScene = self.choose_scenario()
+        return self.currentScene
+
     def choose_scenario(self):
         if len(self.scenarioList) == 0:
             return None
         scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel)))
-        self.scenarioList.remove(scene)
+        # todo: re-enable when we have more scenes
+        # self.scenarioList.remove(scene)
         return scene
+
+    def player_status(self):
+        # when the player model gets too far away from the current, offer a new quest
+        best_scene = self.choose_scenario()
+        if best_scene == self.currentScene:
+            print("~~~everything is fine~~~")
+            return False
+        else:
+            yes_list = ["y", "yes","sure"]
+            if input("you look bored would you like to play something different?") in yes_list:
+                return True
+            else:
+                self.reset_model
+                return False
+
+        pass
 
     def update_model(self, command_array):
         action = command_array[0]
         if action == "talk":
-            self.playerModel[0] = (self.playerModel[0] + 1)/2
+            self.playerModel[0] = (self.playerModel[0]*2 + 1)/3
         if action == "move":
-            self.playerModel[1] = (self.playerModel[1] + 1)/2
+            self.playerModel[1] = (self.playerModel[1]*2 + 1)/3
         if action == "pickup":
-            self.playerModel[2] = (self.playerModel[2] + 1)/2
+            self.playerModel[2] = (self.playerModel[2]*2 + 1)/3
         if action == "look":
-            self.playerModel[3] = (self.playerModel[3] + 1)/2
+            self.playerModel[3] = (self.playerModel[3]*2 + 1)/3
         if action == "use":
-            self.playerModel[4] = (self.playerModel[4] + 1)/2
+            self.playerModel[4] = (self.playerModel[4]*2 + 1)/3
+
+    def reset_model(self):
+        self.playerModel = [0, 0, 0, 0, 0]
 
     def print_model(self):
         print(self.playerModel)
@@ -346,7 +370,7 @@ class Scenario:
 
 class Display:
     player: Player
-    display_width = 50
+    display_width = 100
 
     # pass in arbitrary objects and get proper formatting for their description.
     def __init__(self, player):
@@ -370,6 +394,9 @@ class Display:
 
         pass
 
+    def talk(self, text):
+        self.print_from_list([[text]])
+
     def confirm_command(self, text: str, status: bool=True, command: str=None, args: List[str]=None):
         print()
         # if status is false
@@ -389,7 +416,7 @@ class Display:
 
         pass
 
-    def topics_list(self,actor):
+    def topics_list(self, actor):
         topics_list = actor.get_topics_list(self.player.get_keys())
         print_list = []
 
@@ -502,7 +529,7 @@ def act(command, player, display):
             if topic == "":
                 display.topics_list(actor)
             else:
-                print(player.talk(actor, topic))
+                display.talk(player.talk(actor, topic))
                 print("")
                 display.topics_list(actor)
                 print("")
@@ -568,7 +595,7 @@ def main():
     dm = ScenarioBuilder()
 
     while True:
-        scene = dm.choose_scenario()
+        scene = dm.get_scenario()
         if scene is None:
             print("you won the game! congrats.")
             exit(1)
@@ -591,7 +618,10 @@ def main():
             command_array = parser.parse_commands(command)
 
             dm.update_model(command_array)
-            dm.print_model()
+            if dm.player_status():
+                break
+            # dm.print_model()
+
             # interpret input
             # command_array = parseInput(command, player)
             # act on input and display
