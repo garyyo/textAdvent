@@ -500,10 +500,34 @@
           "dialogues": [
             {
               "topic": "cat",
-              "text": "Why you asking me bud?",
+              "text": "Why you asking me bud? Why do you think that I would know about some old lady's cat?",
               "whitelist": [],
-              "blacklist": ["tavern-beer"],
-              "key": ["tavern-beer"],
+              "blacklist": [],
+              "key": ["spooky-dude-cat"],
+              "unkey": []
+            },
+            {
+              "topic": "old lady cat",
+              "text": "You: I didnt say anything about the cat belonging to an old lady. \n SpookyDude: Yeah fine I do know something about her cat. Why, what do you want with the cat?",
+              "whitelist": ["spooky-dude-cat"],
+              "blacklist": ["spooky-dude-cat-unlocked"],
+              "key": ["spooky-dude-cat-unlocked"],
+              "unkey": []
+            },
+            {
+              "topic": "old lady asked for help",
+              "text": "I yeah well i think I saw it run out the gate",
+              "whitelist": ["spooky-dude-cat"],
+              "blacklist": ["spooky-dude-cat-unlocked"],
+              "key": ["spooky-dude-cat-unlocked"],
+              "unkey": []
+            },
+            {
+              "topic": "trying to get a reward",
+              "text": "Ah, you are after the same thing I am. Well, perhaps we can enter in an agreement.",
+              "whitelist": ["spooky-dude-cat"],
+              "blacklist": ["spooky-dude-cat-unlocked"],
+              "key": ["spooky-dude-cat-unlocked"],
               "unkey": []
             }
           ]
