@@ -34,7 +34,7 @@ mirror neurons. have a machine learn from seeing things and processing those act
       c
 + - - G - - +
 | t g F b . |
-| . . m . . |
+| . a m . . |
 + - - G - - +
 
 G: gate
@@ -44,6 +44,38 @@ b: babushka's house
 t: tavern
 m: market
 c: final location of cat
+a: alley that reveals itself if player is "bored"
+
+write the story:
+    get cat quest from granny
+    ask around town for cat clues
+    get orange cat clue from someone
+        granny, neighbor, etc.
+    ask about orange cat to guard.
+        tells you location of the cat
+        tells you person who might have seen the cat.
+
+    find person who might have seen the cat
+        get location of cat
+            reveals cat in location
+        get help in finding the cat.
+            asks for a portion of the the reward
+                if yes continue
+
+    spooky dude meets you outside gate.
+
+    several areas to find the cat in.
+        you either have to search them all if you dont have help.
+        or if you have help you only have to search one before you are given it.
+
+story branching paths:
+    if you get bored an alley appears from the market to the guild hall, the cat is just sitting there for you to scoop up.
+        an event activates when your "boredom" level rises that shows the cat running into the alley
+        end point branch
+
+
+
+
 
 
 more scenarios, at 4
