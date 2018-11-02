@@ -654,6 +654,113 @@
       ]
     },
     {
+      "name": "alley",
+      "initDesc": "",
+      "desc": "",
+      "items": [
+        {
+          "name":"cat",
+          "initDesc": "an orange cat. its just sitting there, now is your chance, grab it!",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": true,
+          "pickupKey": "catQuest-get-cat"
+        }
+      ],
+      "backgrounds": [
+        {
+          "name":"trash-can",
+          "initDesc": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "A friendly orange cat saunters towards you.",
+          "type": "onEnter",
+          "whitelist": [
+            ""
+          ],
+          "blacklist": [
+            "cat-saunter-first",
+            "cat-left-alley",
+            "catQuest-get-cat"
+          ],
+          "key": [
+            "cat-saunter-first"
+          ],
+          "unkey": [
+            ""
+          ],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        },
+        {
+          "text": "The friendly orange cat continues to follow you.",
+          "type": "onEnter",
+          "whitelist": [
+            ""
+          ],
+          "blacklist": [
+            "catQuest-get-cat",
+            "cat-left-alley"
+          ],
+          "key": [
+            ""
+          ],
+          "unkey": [
+            ""
+          ],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        },
+        {
+          "type": "onLeave",
+          "whitelist": [
+            ""
+          ],
+          "blacklist": [
+            "catQuest-get-cat"
+          ],
+          "key": [
+            "cat-left-alley"
+          ],
+          "unkey": [
+            ""
+          ],
+          "makeVisible": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "Market",
+          "direction": "east"
+        }
+      ]
+    },
+    {
       "name": "Market",
       "initDesc": "",
       "desc": "A bustling market in the middle of the town. There isn't much of interest here",
