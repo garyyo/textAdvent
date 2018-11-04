@@ -181,13 +181,13 @@
       "desc": "you stand outside the gate",
       "links": [
         {
-          "roomName": "north_gate",
+          "roomName": "North Gate",
           "direction": "south"
         }
       ]
     },
     {
-      "name": "north_gate",
+      "name": "North Gate",
       "initDesc": "the north gate of town stands tall in front of you. its not actually that tall, about 3 meters, but its also not that big of a town",
       "desc": "",
       "actors": [
@@ -317,7 +317,7 @@
       ],
       "links": [
         {
-          "roomName": "north_gate",
+          "roomName": "North Gate",
           "direction": "north"
         },
         {
@@ -325,7 +325,7 @@
           "direction": "south"
         },
         {
-          "roomName": "guild_hall",
+          "roomName": "Guild Hall",
           "direction": "west"
         },
         {
@@ -335,9 +335,9 @@
       ]
     },
     {
-      "name": "guild_hall",
+      "name": "Guild Hall",
       "initDesc": "",
-      "desc": "The guild hall stands tall before you. One of the few buildings in town made purely from stone, looks like these guys are pretty rich",
+      "desc": "The Guild Hall stands tall before you. One of the few buildings in town made purely from stone, looks like these guys are pretty rich",
       "actors": [
         {
           "name": "Bron",
@@ -370,16 +370,16 @@
       ],
       "events": [
         {
-          "text": "",
+          "text": "You see an orange cat run into a nearby alley. Is that the cat you are looking for?",
           "type": "onEnter",
-          "whitelist": [],
-          "blacklist": [],
-          "key": [],
+          "whitelist": ["bored", "catQuest"],
+          "blacklist": ["cat-alley-once"],
+          "key": ["cat-alley-once"],
           "unkey": [],
           "makeVisible": [
             {
-              "name": "",
-              "class": ""
+              "name": "alley",
+              "class": "link"
             }
           ]
         }
@@ -392,6 +392,11 @@
         {
           "roomName": "tavern",
           "direction": "west"
+        },
+        {
+          "roomName": "alley",
+          "direction": "south",
+          "hidden": true
         }
       ]
     },
@@ -453,7 +458,7 @@
       ],
       "links": [
         {
-          "roomName": "guild_hall",
+          "roomName": "Guild Hall",
           "direction": "east"
         },
         {
@@ -661,7 +666,7 @@
         {
           "name":"cat",
           "initDesc": "an orange cat. its just sitting there, now is your chance, grab it!",
-          "invDesc": "",
+          "invDesc": "the cat occasionally struggles to free itself as you carry it",
           "desc": "",
           "weight": 0,
           "smell": "",
@@ -700,19 +705,13 @@
           ],
           "unkey": [
             ""
-          ],
-          "makeVisible": [
-            {
-              "name": "",
-              "class": ""
-            }
           ]
         },
         {
           "text": "The friendly orange cat continues to follow you.",
-          "type": "onEnter",
+          "type": "active",
           "whitelist": [
-            ""
+            "cat-saunter-first"
           ],
           "blacklist": [
             "catQuest-get-cat",
@@ -745,10 +744,10 @@
           "unkey": [
             ""
           ],
-          "makeVisible": [
+          "makeInvisible": [
             {
-              "name": "",
-              "class": ""
+              "name": "cat",
+              "class": "item"
             }
           ]
         }
@@ -757,6 +756,10 @@
         {
           "roomName": "Market",
           "direction": "east"
+        },
+        {
+          "roomName": "Guild Hall",
+          "direction": "north"
         }
       ]
     },
@@ -772,6 +775,11 @@
         {
           "roomName": "South Gate",
           "direction": "south"
+        },
+        {
+          "roomName": "alley",
+          "direction": "west",
+          "hidden": true
         }
       ]
     },

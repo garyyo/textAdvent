@@ -137,9 +137,9 @@ class Actor(Entity):
             return self.dialogueList[topic].check_allowed(keys)
         return False
 
-    def speak_topic(self, topic):
+    def speak_topic(self, topic, player):
         if topic in self.dialogueList:
-            return self.dialogueList[topic].activate()
+            return self.dialogueList[topic].activate(player)
         return ""
 
     def give_dialogue_keys(self, topic):

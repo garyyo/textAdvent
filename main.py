@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 import json
 import math
 from pprint import pprint
@@ -174,7 +176,7 @@ class Parser:
             counter = 0
             for i in range(character_length):
                 counter += 1 if event_name.lower()[i] == word.lower()[i] else 0
-                correct_list[event_name] = counter/character_length
+                correct_list[event_name] = counter / character_length
         if not correct_list:
             return word
         key = max(correct_list, key=lambda x: correct_list[x])
@@ -227,6 +229,11 @@ class ScenarioBuilder:
         # self.scenarioList.remove(scene)
         return scene
 
+    def keys_from_model(self):
+        if self.player_status():
+            return ["bored"], []
+        return [], ["bored"]
+
     def player_status(self):
         # when the player model gets too far away from the current, offer a new quest
         best_scene = self.choose_scenario()
@@ -234,27 +241,20 @@ class ScenarioBuilder:
             print("~~~everything is fine~~~")
             return False
         else:
-            yes_list = ["y", "yes","sure"]
-            if input("you look bored would you like to play something different?") in yes_list:
-                return True
-            else:
-                self.reset_model()
-                return False
-
-        pass
+            return True
 
     def update_model(self, command_array):
         action = command_array[0]
         if action == "talk":
-            self.playerModel[0] = (self.playerModel[0]*2 + 1)/3
+            self.playerModel[0] = (self.playerModel[0] * 2 + 1) / 3
         if action == "move":
-            self.playerModel[1] = (self.playerModel[1]*2 + 1)/3
+            self.playerModel[1] = (self.playerModel[1] * 2 + 1) / 3
         if action == "pickup":
-            self.playerModel[2] = (self.playerModel[2]*2 + 1)/3
+            self.playerModel[2] = (self.playerModel[2] * 2 + 1) / 3
         if action == "look":
-            self.playerModel[3] = (self.playerModel[3]*2 + 1)/3
+            self.playerModel[3] = (self.playerModel[3] * 2 + 1) / 3
         if action == "use":
-            self.playerModel[4] = (self.playerModel[4]*2 + 1)/3
+            self.playerModel[4] = (self.playerModel[4] * 2 + 1) / 3
 
     def reset_model(self):
         self.playerModel = [0, 0, 0, 0, 0]
@@ -311,7 +311,10 @@ class Scenario:
             if "links" in room_json:
                 linking_room = self.roomList[room_json["name"]]
                 for linkJSON in room_json["links"]:
-                    linking_room.add_link(self.roomList[linkJSON["roomName"]], linkJSON["direction"])
+                    linking_room.add_link(self.roomList[linkJSON["roomName"]] if "roomName" in linkJSON else "template",
+                                          linkJSON["direction"] if "direction" in linkJSON else "up",
+                                          linkJSON["hidden"] if "hidden" in linkJSON else False)
+
 
     def actor_create(self, actor_json):
         new_actor = Actor(
@@ -326,14 +329,21 @@ class Scenario:
 
         if "dialogues" in actor_json:
             for dialogueJSON in actor_json["dialogues"]:
-                new_actor.add_dialogue(
-                    Dialogue(dialogueJSON["whitelist"] if "whitelist" in dialogueJSON else "",
-                             dialogueJSON["blacklist"] if "blacklist" in dialogueJSON else "",
-                             dialogueJSON["key"] if "key" in dialogueJSON else "",
-                             dialogueJSON["unkey"] if "unkey" in dialogueJSON else "",
-                             dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
-                             dialogueJSON["topic"] if "topic" in dialogueJSON else "")
-                )
+                new_dialogue = Dialogue(dialogueJSON["whitelist"] if "whitelist" in dialogueJSON else "",
+                                        dialogueJSON["blacklist"] if "blacklist" in dialogueJSON else "",
+                                        dialogueJSON["key"] if "key" in dialogueJSON else "",
+                                        dialogueJSON["unkey"] if "unkey" in dialogueJSON else "",
+                                        dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
+                                        dialogueJSON["topic"] if "topic" in dialogueJSON else "")
+
+                for i in range(len(new_dialogue.whitelistKeys)):
+                    if new_dialogue.whitelistKeys[i] == "":
+                        new_dialogue.whitelistKeys.pop(i)
+                for i in range(len(new_dialogue.blacklistKeys)):
+                    if new_dialogue.blacklistKeys[i] == "":
+                        new_dialogue.blacklistKeys.pop(i)
+
+                new_actor.add_dialogue(new_dialogue)
 
         self.actorList.append(new_actor)
         return new_actor
@@ -379,6 +389,14 @@ class Scenario:
                     visibleJSON["class"] if "class" in visibleJSON else ""
                 ])
 
+        # remove blank keys
+        for i in range(len(new_event.whitelistKeys)):
+            if new_event.whitelistKeys[i] == "":
+                new_event.whitelistKeys.pop(i)
+        for i in range(len(new_event.blacklistKeys)):
+            if new_event.blacklistKeys[i] == "":
+                new_event.blacklistKeys.pop(i)
+
         self.eventList.append(new_event)
         return new_event
 
@@ -393,49 +411,50 @@ class Scenario:
 class Display:
     player: Player
     display_width = 100
+    print_list: List[List[str]]
 
     # pass in arbitrary objects and get proper formatting for their description.
     def __init__(self, player):
         self.player = player
+        self.print_list = []
         pass
 
-    def print_from_list(self, print_list_list):
-        for print_list in print_list_list:
+    def add_print_list(self, print_list):
+        self.print_list.append(print_list)
+
+    def print(self):
+        for print_list in self.print_list:
             for line in print_list:
                 while len(line) > 0:
                     print_line, line = self.break_text(line)
                     print(print_line)
                 # print(line)
-            print()
+            # print()
+        self.print_list = []
 
     def display_room(self):
-        print_list_list = []
-        print_list_list.append(self.link_list())
-        print_list_list.append(self.actor_list())
-        print_list_list.append(self.item_list())
-
-        pass
+        self.link_list()
+        self.actor_list()
+        self.item_list()
 
     def talk(self, actor, topic):
         if not actor.check_topic(topic, self.player.get_keys()):
-            self.print_from_list([[actor.get_name() + " does not know about this topic."]])
+            self.add_print_list([[actor.get_name() + " does not know about this topic."]])
             return
-        self.print_from_list([[actor.get_name() + ": " + actor.speak_topic(topic)]])
+        self.add_print_list([actor.get_name() + ": " + actor.speak_topic(topic, self.player)])
 
-    def confirm_command(self, text: str, status: bool=True, command: str=None, args: List[str]=None):
+    def confirm_command(self, text: str, status: bool = True, command: str = None, args: List[str] = None):
         print()
         # if status is false
         #   print in red because an action failed
         if not status:
-            print(self.color_text(text,"red"))
+            print(self.color_text(text, "red"))
             print()
             return
 
         # types interpreted from command???: multiline, confirmation,
         # command and args are only to be used in very specific cases, like topic listing.
         # i still want everything to be routed through this function.
-
-        #
 
         pass
 
@@ -444,20 +463,20 @@ class Display:
         print_list = []
 
         for chatKey, chatEntry in topics_list.items():
-            print_list.append("\t" + self.color_text(chatEntry.get_topic(),"yellow"))
+            print_list.append("\t" + self.color_text(chatEntry.get_topic(), "yellow"))
         if print_list == "":
-            print_list.append(self.color_text("They don't want to talk.","red"))
+            print_list.append(self.color_text("They don't want to talk.", "red"))
         else:
             print_list.insert(0, self.color_text(actor.get_name(), "blue") + " can talk about: ")
-        self.print_from_list([print_list])
+        self.add_print_list(print_list)
 
     def inventory(self):
         if not self.player.get_inventory():
             return
         print_list = []
         inventory_width = 5 + len(max(self.player.get_inventory(), key=lambda x: len(x.get_inv_desc())).get_inv_desc())
-        print_list.append("=" + ("-"*int(inventory_width)) + "=")
-        print_list.append("|" + (" "*int(inventory_width)) + "|")
+        print_list.append("=" + ("-" * int(inventory_width)) + "=")
+        print_list.append("|" + (" " * int(inventory_width)) + "|")
         item_num = 0
         for item in self.player.get_inventory():
             item_num += 1
@@ -466,11 +485,10 @@ class Display:
             d_spaced = d + (math.floor((inventory_width - d_length)) * " ")
             print_list.append("|" + d_spaced + "|")
 
-        print_list.append("|" + (" "*inventory_width) + "|")
-        print_list.append("=" + ("-"*inventory_width) + "=")
+        print_list.append("|" + (" " * inventory_width) + "|")
+        print_list.append("=" + ("-" * inventory_width) + "=")
 
-        print("\n".join(print_list))
-        return print_list
+        self.add_print_list(print_list)
 
     def actor_list(self):
         print_list = []
@@ -481,8 +499,8 @@ class Display:
                 print_list.append("\t" + self.color_text(actor.get_name(), "yellow") + ": " + actor.get_desc())
         else:
             print_list.append(self.color_text("You are alone", "green"))
-        print("\n".join(print_list))
-        return print_list
+
+        self.add_print_list(print_list)
 
     def item_list(self):
         print_list = []
@@ -494,8 +512,8 @@ class Display:
                     print_list.append("\t" + self.color_text(item.get_name(), "yellow") + ": " + item.get_desc())
         else:
             print_list.append(self.color_text("There is nothing of interest here", "green"))
-        print("\n".join(print_list))
-        return print_list
+
+        self.add_print_list(print_list)
 
     def link_list(self):
         print_list = []
@@ -506,8 +524,8 @@ class Display:
                 print_list.append("\t" + self.color_text(link.get_direction(), "yellow") + ": " + link.get_room_name())
         else:
             print_list.append(self.color_text("There is nowhere to go", "green"))
-        print("\n".join(print_list))
-        return print_list
+
+        self.add_print_list(print_list)
 
     @staticmethod
     def color_text(text, color):
@@ -529,13 +547,13 @@ class Display:
             index = text[:self.display_width + 1].rfind("\n")
             print_text = text[:index].strip()
         else:
-            index = text[:self.display_width+1].rfind(" ")
+            index = text[:self.display_width + 1].rfind(" ")
             print_text = text[:index].strip()
-        line = text[index+1:]
+        line = text[index + 1:]
         return print_text, line
 
 
-def act(command, player:Player, display: Display):
+def act(command, player: Player, display: Display):
     # do verb on object
     verb = command[0]
     target = command[1]
@@ -551,12 +569,15 @@ def act(command, player:Player, display: Display):
         if attempt is not None:
             print("you have dropped", target)
         else:
-            display.confirm_command("you do not have that item in your pockets",False)
+            display.confirm_command("you do not have that item in your pockets", False)
     elif verb == "move":
+        event_listener("onLeave", player)
+        # todo: add check separate from action
         attempt = player.move(" ".join(filter(lambda x: len(x) > 0, command[1:])))
         if attempt is None:
-            display.confirm_command("there is nothing in that direction",False)
+            display.confirm_command("there is nothing in that direction", False)
         else:
+            # todo: move leave to here, and add actual move in between on leave and and on enter.
             event_listener("onEnter", player)
     elif verb == "talk":
         topic = command[2]
@@ -564,11 +585,12 @@ def act(command, player:Player, display: Display):
         if actor is not None:
             if topic != "":
                 display.talk(actor, topic)
-                player.talk(actor, topic)
+                # player.talk(actor, topic)
             display.topics_list(actor)
         else:
-            display.confirm_command("you talk into the aether to someone who isn't there",False)
+            display.confirm_command("you talk into the aether to someone who isn't there", False)
     elif verb == "inventory":
+        display.inventory()
         pass
     elif verb == "look":
         pass
@@ -581,7 +603,7 @@ def act(command, player:Player, display: Display):
     elif verb == "key":
         print(player.get_keys())
     else:
-        display.confirm_command("I do not understand that command",False)
+        display.confirm_command("I do not understand that command", False)
 
     # basic interaction types
 
@@ -589,13 +611,14 @@ def act(command, player:Player, display: Display):
 # todo: change print statement to use the display object.
 def event_listener(event_type, player):
     events = player.get_location().get_events()
+    current_keys = copy.copy(player.get_keys())
     for event in events:
         if event.get_type() == event_type:
-            # print("keys", player.get_keys())
+            # print("keys", current_keys)
             # print("whitelist", event.whitelistKeys)
             # print("blacklist", event.blacklistKeys)
 
-            if event.check_allowed(player.get_keys()):
+            if event.check_allowed(current_keys):
                 # print("event activated!")
                 print(event.activate(player))
             else:
@@ -612,6 +635,17 @@ def win_condition(player):
         player.remove_key("win")
         return True
     return False
+
+
+def pre_act(player):
+    pass
+
+
+def post_act(player: Player, display: Display):
+    player.update_keyring()
+    display.display_room()
+    display.print()
+    pass
 
 
 def main():
@@ -638,21 +672,25 @@ def main():
 
         # have the player enter the room officially.
         event_listener("onEnter", player)
+        post_act(player, display)
 
         while not win_condition(player):
             # TODO: implement pre/in/post act functions
 
             # current state of pre act function
 
-            display.display_room()
-
             # input
             command = input("> ")
             command_array = parser.parse_commands(command)
 
+
             dm.update_model(command_array)
             if dm.player_status():
-                break
+                add, remove = dm.keys_from_model()
+                for key in add:
+                    player.add_key(key)
+                for key in remove:
+                    player.remove_key(key)
             # dm.print_model()
 
             # interpret input
@@ -661,7 +699,10 @@ def main():
 
             act(command_array, player, display)
             event_listener("active", player)
+
             # postAct(command_array, player)
+
+            post_act(player, display)
 
         # give the player some blank space to look at
         input("Press enter to continue...")

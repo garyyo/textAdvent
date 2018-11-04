@@ -47,8 +47,8 @@ class Room:
     def get_desc(self):
         return self.description
 
-    def add_link(self, location, direction):
-        self.links.append(Link(location, direction))
+    def add_link(self, location, direction, hidden):
+        self.links.append(Link(location, direction, hidden))
 
     def add_actor(self, actor):
         if actor:
@@ -73,6 +73,9 @@ class Room:
         return self.events
 
     def get_links(self):
+        return list(filter(lambda x: x.get_visible(), self.links))
+
+    def get_all_links(self):
         return self.links
 
     def get_items(self):
@@ -86,13 +89,17 @@ class Player:
     location: Room
     inventory: List[Item]
     conditions: List[str]
-    keyList: List[str]
+    keyring: List[str]
+    added_keys: List[str]
+    removed_keys: List[str]
 
     def __init__(self, start_location, starting_keys):
         self.location = start_location
-        self.inventory: List[Item] = []
-        self.conditions: List[str] = []
-        self.keyList = starting_keys
+        self.inventory = []
+        self.conditions = []
+        self.keyring = starting_keys
+        self.added_keys = []
+        self.removed_keys = []
 
     def get_location(self):
         return self.location
@@ -141,20 +148,29 @@ class Player:
     def remove_from_inventory(self, index):
         return self.inventory.pop(index)
 
+    def update_keyring(self):
+        for key in self.added_keys:
+            self.keyring.append(key)
+        self.added_keys = []
+        for key in self.removed_keys:
+            self.keyring.remove(key)
+        self.removed_keys = []
+
+
     def add_key(self, key):
-        if key not in self.keyList:
-            self.keyList.append(key)
-            return len(self.keyList)
+        if key not in self.keyring:
+            self.added_keys.append(key)
+            return len(self.keyring)
         return None
 
     def remove_key(self, key):
-        if key in self.keyList:
-            self.keyList.remove(key)
-            return len(self.keyList)
+        if key in self.keyring:
+            self.removed_keys.remove(key)
+            return len(self.keyring)
         return None
 
     def get_keys(self):
-        return self.keyList
+        return self.keyring
 
     def move(self, direction):
         links = self.location.get_links()
@@ -183,10 +199,10 @@ class Link:
     location: Room
     visible: bool
 
-    def __init__(self, location, direction):
+    def __init__(self, location, direction, visible):
         self.location = location
         self.direction = direction
-        self.visible = True
+        self.visible = not visible
 
     def get_visible(self):
         return self.visible

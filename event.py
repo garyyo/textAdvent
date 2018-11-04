@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List
+from base import *
 
 
 class Event:
@@ -21,8 +22,8 @@ class Event:
         self.makeVisible = []
         self.makeInvisible = []
 
-    def activate(self, agent):
-        location = agent.get_location()
+    def activate(self, player):
+        location: Room = player.get_location()
         for ref in self.makeVisible:
             name = ref[0]
             class_type = ref[1]
@@ -32,6 +33,10 @@ class Event:
             if class_type == "item":
                 if location.get_item(name):
                     location.get_item(name).show()
+            if class_type == "link":
+                for link in location.get_all_links():
+                    if link.get_room_name() == name:
+                        link.show()
         for ref in self.makeInvisible:
             name = ref[0]
             class_type = ref[1]
@@ -47,18 +52,18 @@ class Event:
                     link.hide()
 
         for key in self.giveKeys:
-            agent.add_key(key)
+            player.add_key(key)
         for key in self.takeKeys:
-            agent.remove_key(key)
+            player.remove_key(key)
 
         return self.text
 
     def check_allowed(self, keys):
-        if self.whitelistKeys:
+        if len(self.whitelistKeys) != 0:
             for key in self.whitelistKeys:
                 if key not in keys:
                     return False
-        if self.blacklistKeys:
+        if len(self.blacklistKeys) != 0:
             for key in keys:
                 if key in self.blacklistKeys:
                     return False
@@ -90,5 +95,9 @@ class Dialogue(Event):
     def get_topic(self):
         return self.type
 
-    def activate(self, player=None):
+    def activate(self, player):
+        for key in self.giveKeys:
+            player.add_key(key)
+        for key in self.takeKeys:
+            player.remove_key(key)
         return self.text
