@@ -3,9 +3,10 @@ from __future__ import annotations
 import copy
 import json
 import math
-from pprint import pprint
 
 from base import *
+from entity import *
+from event import *
 from typing import List, Dict
 
 
@@ -315,7 +316,6 @@ class Scenario:
                                           linkJSON["direction"] if "direction" in linkJSON else "up",
                                           linkJSON["hidden"] if "hidden" in linkJSON else False)
 
-
     def actor_create(self, actor_json):
         new_actor = Actor(
             actor_json["name"] if "name" in actor_json else "",
@@ -444,6 +444,7 @@ class Display:
         self.add_print_list([actor.get_name() + ": " + actor.speak_topic(topic, self.player)])
 
     def confirm_command(self, text: str, status: bool = True, command: str = None, args: List[str] = None):
+        # todo: figure out what to do here. do i even need this?
         print()
         # if status is false
         #   print in red because an action failed
@@ -639,6 +640,7 @@ def win_condition(player):
 
 def pre_act(player):
     pass
+    return player
 
 
 def post_act(player: Player, display: Display):
@@ -646,6 +648,16 @@ def post_act(player: Player, display: Display):
     display.display_room()
     display.print()
     pass
+
+
+def intro_q():
+    answers = []
+    print("answer with y or n")
+    answers.append(True if input("do you like swords") == "y" else False)
+    answers.append(True if input("do you like talking") == "y" else False)
+    answers.append(True if input("do you want mystery") == "y" else False)
+    answers.append(True if input("do you want action") == "y" else False)
+    return answers
 
 
 def main():
@@ -682,7 +694,6 @@ def main():
             # input
             command = input("> ")
             command_array = parser.parse_commands(command)
-
 
             dm.update_model(command_array)
             if dm.player_status():

@@ -87,6 +87,7 @@ how does it look like to offer the quest
     how do you make the player know there is an alternative without being too disruptive
 how to choose the quest to offer.
 
+todo: probably not, just use existing key method
 add tags to each place so you can trigger a global "change path" event if we need to
     tag outside, player seeks action
         cat runs past into an alley, go chase
@@ -95,8 +96,7 @@ add tags to each place so you can trigger a global "change path" event if we nee
 
 research how to update confidence. and determine the best choice.
 
-write an intro questionaareieie
-
+write an intro questionnaire
 update confidence
 
 based on
