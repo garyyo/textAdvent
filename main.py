@@ -801,6 +801,43 @@ def main():
 
     dm = ScenarioBuilder()
 
+    testCases = [
+        [
+            "e",
+            "t b c",
+            "w",
+            "n",
+            "t g o",
+            "s",
+            "w",
+            "w",
+            "go t",
+            "k",
+            "t b"
+        ],
+        [
+            "e",
+            "t b c",
+            "w",
+            "touch f",
+            "touch f",
+            "w",
+            "s",
+            "grab cat"
+        ],
+        [
+
+            "e",
+            "t b c",
+            "w",
+            "n",
+            "t g o",
+            "n",
+            "look at the bush"
+        ]
+    ]
+    testCaseNum = 2
+    testing = True
     while True:
         scene = dm.get_scenario()
         if scene is None:
@@ -820,7 +857,11 @@ def main():
             # current state of pre act function
 
             # input
-            command = input("> ")
+            if len(testCases[testCaseNum]) > 0 and testing:
+                command = testCases[testCaseNum].pop(0)
+                print(">", command)
+            else:
+                command = input("> ")
             command_array = parser.parse_commands(command)
 
             dm.update_model(command_array)
