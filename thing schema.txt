@@ -46,10 +46,21 @@ event:
     blacklist: player cannot have tags in this list
     key: gives a key to player
     unkey: takes a key from player if exists
-    makeVisible: will change to show/hide
+    show:
         name: name of thing to make visible
         class: what type of object, just to know which list to search
             actor, link, item
+    hide:
+        name: name of thing to make visible
+        class: what type of object, just to know which list to search
+            actor, link, item
+    TODO:
+    addItem: adds an item to your inventory
+        name: the program will search for that item in the room, and place into your inventory
+    removeItem: removes item from your inventory
+        name: will remove item from inventory by name, and place into the world.
+        hidden: if true the item will also then be hidden
+
 
 dialogues: very similar to event... now extends event
 

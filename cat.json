@@ -2,13 +2,13 @@
   "rooms": [
     {
       "name": "template",
-      "initDesc": "",
+      "examine": "",
       "desc": "",
       "actors": [
         {
           "name": "",
           "desc": "",
-          "initDesc": "",
+          "examine": "",
           "dialogues": [
             {
               "topic": "nothing",
@@ -32,7 +32,7 @@
       "items": [
         {
           "name":"template",
-          "initDesc": "",
+          "examine": "",
           "invDesc": "",
           "desc": "",
           "weight": 0,
@@ -56,7 +56,7 @@
               "unkey": [
                 ""
               ],
-              "makeVisible": [
+              "show": [
                 {
                   "name": "",
                   "class": ""
@@ -78,7 +78,7 @@
               "unkey": [
                 ""
               ],
-              "makeVisible": [
+              "show": [
                 {
                   "name": "",
                   "class": ""
@@ -100,7 +100,7 @@
               "unkey": [
                 ""
               ],
-              "makeVisible": [
+              "show": [
                 {
                   "name": "",
                   "class": ""
@@ -122,7 +122,7 @@
               "unkey": [
                 ""
               ],
-              "makeVisible": [
+              "show": [
                 {
                   "name": "",
                   "class": ""
@@ -135,7 +135,7 @@
       "backgrounds": [
         {
           "name":"template",
-          "initDesc": "",
+          "examine": "",
           "invDesc": "",
           "desc": "",
           "weight": 0,
@@ -161,7 +161,7 @@
           "unkey": [
             ""
           ],
-          "makeVisible": [
+          "show": [
             {
               "name": "",
               "class": ""
@@ -177,24 +177,72 @@
       ]
     },
     {
-      "name": "outside_gate",
-      "desc": "you stand outside the gate",
+      "name": "outside gate",
+      "desc": "The gate stands short behind you. Its not that big a gate.",
       "links": [
         {
           "roomName": "North Gate",
           "direction": "south"
         }
+      ],
+      "items": [
+        {
+          "name":"Babushka's cat",
+          "examine": "an orange cat. its just sitting there, now is your chance, grab it!",
+          "invDesc": "the cat occasionally struggles to free itself as you carry it",
+          "desc": "a quiet orange cat.",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": true,
+          "pickupKey": "catQuest-get-cat",
+          "hidden": true
+        }
+      ],
+      "backgrounds": [
+        {
+          "name":"bush",
+          "examine": "Its a thick bush, you might be able to fit into it",
+          "desc": "A great green bush, wrapping its way around the town walls. who takes care of it?",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "events": [
+            {
+              "text": "An orange cat jumps out in front of you",
+              "type": "onExamine",
+              "whitelist": [
+                "catQuest"
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "Babushka's cat",
+                  "class": "item"
+                }
+              ]
+            }
+          ]
+        }
       ]
     },
     {
       "name": "North Gate",
-      "initDesc": "the north gate of town stands tall in front of you. its not actually that tall, about 3 meters, but its also not that big of a town",
+      "examine": "the north gate of town stands tall in front of you. its not actually that tall, about 3 meters, but its also not that big of a town",
       "desc": "",
       "actors": [
         {
           "name": "guard",
           "desc": "a sleepy guard",
-          "initDesc": "a sleepy guard",
+          "examine": "a sleepy guard",
           "dialogues": [
             {
               "topic": "cat",
@@ -223,15 +271,15 @@
       ],
       "items": [
         {
-          "name":"template",
-          "initDesc": "",
-          "invDesc": "",
-          "desc": "",
+          "name":"Guard's keys",
+          "examine": "The keys of the guard. Perhaps its best to leave them alone",
+          "invDesc": "guards keys, I wonder what they unlock",
+          "desc": "keys hanging off the belt of the guard",
           "weight": 0,
           "smell": "",
           "taste": "",
           "pickupable": false,
-          "pickupKey": ""
+          "pickupKey": "guard-keys"
         }
       ],
       "events": [
@@ -242,7 +290,7 @@
           "blacklist": [],
           "key": [],
           "unkey": [],
-          "makeVisible": [
+          "show": [
             {
               "name": "",
               "class": ""
@@ -252,7 +300,7 @@
       ],
       "links": [
         {
-          "roomName": "outside_gate",
+          "roomName": "outside gate",
           "direction": "north"
         },
         {
@@ -263,14 +311,14 @@
     },
     {
       "name": "fountain",
-      "initDesc": "",
-      "desc": "you are at a fountain. a shining beacon in the middle of the town",
+      "examine": "",
+      "desc": "The fountain stands before you. You feel it somehow demonstrates the power of man over nature.",
       "startLocation": true,
       "actors": [
         {
           "name": "",
           "desc": "",
-          "initDesc": "",
+          "examine": "",
           "dialogues": [
             {
               "topic": "nothing",
@@ -286,18 +334,52 @@
       "backgrounds": [
         {
           "name":"fountain",
-          "examine": "a large fountain that stands in the center of the town. ",
-          "desc": "",
+          "examine": "A large fountain that stands in the center of the town. ",
+          "desc": "It pours water all over itself. How presumptuous",
           "weight": 0,
           "smell": "",
           "taste": "",
           "pickupable": false,
-          "pickupKey": ""
+          "pickupKey": "",
+          "events": [
+            {
+              "text": "You turned the fountain off. Quick, turn it back on before someone notices",
+              "type": "onUse",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                "fountain-off"
+              ],
+              "key": [
+                "fountain-off"
+              ],
+              "unkey": [
+                "fountain-on"
+              ]
+            },
+            {
+              "text": "You turned the fountain on. Thank goodness no one noticed. Lets not do that again...",
+              "type": "onUse",
+              "whitelist": [
+                "fountain-off"
+              ],
+              "blacklist": [
+                "fountain-on"
+              ],
+              "key": [
+                "fountain-on"
+              ],
+              "unkey": [
+                "fountain-off"
+              ]
+            }
+          ]
         }
       ],
       "events": [
         {
-          "text": "You awaken in front of a fountain, it was just a dream. now to get on to your day job, finding a cat for an old lady.",
+          "text": "You awaken in front of a fountain, it was just a dream. Now to get on to your day job, finding a cat for an old lady.",
           "type": "onEnter",
           "whitelist": [],
           "blacklist": [
@@ -307,7 +389,7 @@
             "fountain-start"
           ],
           "unkey": [],
-          "makeVisible": [
+          "show": [
             {
               "name": "",
               "class": ""
@@ -336,13 +418,13 @@
     },
     {
       "name": "Guild Hall",
-      "initDesc": "",
+      "examine": "",
       "desc": "The Guild Hall stands tall before you. One of the few buildings in town made purely from stone, looks like these guys are pretty rich",
       "actors": [
         {
           "name": "Bron",
           "desc": "Its the guild master. He masters the guild.",
-          "initDesc": "",
+          "examine": "",
           "dialogues": [
             {
               "topic": "old lady",
@@ -355,19 +437,6 @@
           ]
         }
       ],
-      "items": [
-        {
-          "name":"template",
-          "initDesc": "",
-          "invDesc": "",
-          "desc": "",
-          "weight": 0,
-          "smell": "",
-          "taste": "",
-          "pickupable": false,
-          "pickupKey": ""
-        }
-      ],
       "events": [
         {
           "text": "You see an orange cat run into a nearby alley. Is that the cat you are looking for?",
@@ -376,7 +445,7 @@
           "blacklist": ["cat-alley-once"],
           "key": ["cat-alley-once"],
           "unkey": [],
-          "makeVisible": [
+          "show": [
             {
               "name": "alley",
               "class": "link"
@@ -402,60 +471,8 @@
     },
     {
       "name": "tavern",
-      "initDesc": "",
+      "examine": "",
       "desc": "",
-      "actors": [
-        {
-          "name": "",
-          "desc": "",
-          "initDesc": "",
-          "dialogues": [
-            {
-              "topic": "nothing",
-              "text": "",
-              "whitelist": [],
-              "blacklist": [],
-              "key": [],
-              "unkey": []
-            }
-          ]
-        }
-      ],
-      "items": [
-        {
-          "name":"template",
-          "initDesc": "",
-          "invDesc": "",
-          "desc": "",
-          "weight": 0,
-          "smell": "",
-          "taste": "",
-          "pickupable": false,
-          "pickupKey": ""
-        }
-      ],
-      "events": [
-        {
-          "text": "",
-          "type": "onEnter",
-          "whitelist": [],
-          "blacklist": [],
-          "key": [],
-          "unkey": [],
-          "makeVisible": [
-            {
-              "name": "",
-              "class": ""
-            }
-          ],
-          "makeInvisible": [
-            {
-              "name": "",
-              "class": ""
-            }
-          ]
-        }
-      ],
       "links": [
         {
           "roomName": "Guild Hall",
@@ -469,14 +486,13 @@
     },
     {
       "name": "tavern interior",
-      "initDesc": "",
+      "examine": "",
       "desc": "a large tavern. several travelers and locals sit around merrily drinking and chatting.",
       "actors": [
         {
           "name": "Bartender",
           "desc": "A gruff dude",
           "examine": "A large imposing man, likely acts as security for the tavern, as well as serving drinks.",
-          "initDesc": "",
           "dialogues": [
             {
               "topic": "drink",
@@ -501,13 +517,13 @@
           "name": "spooky dude",
           "desc": "a dude sitting in the corner, almost invisible",
           "examine": "a truly spooky dude.",
-          "initDesc": "",
+          "hidden": true,
           "dialogues": [
             {
               "topic": "cat",
               "text": "Why you asking me bud? Why do you think that I would know about some old lady's cat?",
-              "whitelist": [],
-              "blacklist": [],
+              "whitelist": ["catQuest"],
+              "blacklist": ["spooky-dude-cat","catQuest-get-cat"],
               "key": ["spooky-dude-cat"],
               "unkey": []
             },
@@ -521,18 +537,48 @@
             },
             {
               "topic": "old lady asked for help",
-              "text": "I yeah well i think I saw it run out the gate",
-              "whitelist": ["spooky-dude-cat"],
-              "blacklist": ["spooky-dude-cat-unlocked"],
-              "key": ["spooky-dude-cat-unlocked"],
+              "text": "I yeah well I think I saw it run out the gate",
+              "whitelist": ["spooky-dude-cat-unlocked"],
+              "blacklist": ["spooky-dude-cat-success","spooky-dude-cat-failed"],
+              "key": ["spooky-dude-cat-failed"],
               "unkey": []
             },
             {
               "topic": "trying to get a reward",
-              "text": "Ah, you are after the same thing I am. Well, perhaps we can enter in an agreement.",
-              "whitelist": ["spooky-dude-cat"],
-              "blacklist": ["spooky-dude-cat-unlocked"],
-              "key": ["spooky-dude-cat-unlocked"],
+              "text": "Ah, you are after the same thing I am. Well, perhaps we can both gain something here.",
+              "whitelist": ["spooky-dude-cat-unlocked"],
+              "blacklist": ["spooky-dude-cat-success","spooky-dude-cat-failed"],
+              "key": ["spooky-dude-cat-success"],
+              "unkey": []
+            },
+            {
+              "topic": "cat location",
+              "text": "I can take you to where I last saw it, but you gotta promise me some of your reward money. How does a 20-80 split sound, you get the 80.",
+              "whitelist": ["spooky-dude-cat-success"],
+              "blacklist": ["spooky-dude-cat-unlocked-location"],
+              "key": ["spooky-dude-cat-unlocked-location"],
+              "unkey": []
+            },
+            {
+              "topic": "agree",
+              "text": "Alright, follow me to the north gate then",
+              "whitelist": ["spooky-dude-cat-unlocked-location"],
+              "blacklist": ["spooky-dude-leaves-good"],
+              "key": ["spooky-dude-leaves-good"],
+              "unkey": [],
+              "hide": [
+                {
+                  "name": "spooky dude",
+                  "class": "actor"
+                }
+              ]
+            },
+            {
+              "topic": "think about it",
+              "text": "Alright, well come back to me when you need my help",
+              "whitelist": ["spooky-dude-cat-unlocked-location"],
+              "blacklist": ["spooky-dude-leaves-good"],
+              "key": [],
               "unkey": []
             }
           ]
@@ -554,7 +600,7 @@
           "blacklist": ["tavern-beer-visible"],
           "key": ["tavern-beer-visible"],
           "unkey": [],
-          "makeVisible": [
+          "show": [
             {
               "name": "beer",
               "class": "item"
@@ -568,7 +614,7 @@
           "blacklist": ["spooky-dude-visible"],
           "key": ["spooky-dude-visible"],
           "unkey": [],
-          "makeVisible": [
+          "show": [
             {
               "name": "spooky dude",
               "class": "actor"
@@ -579,7 +625,7 @@
       "items": [
         {
           "name":"beer",
-          "initDesc": "A beer, its for you",
+          "examine": "A beer, its for you",
           "invDesc": "",
           "desc": "",
           "weight": 0,
@@ -599,14 +645,13 @@
     },
     {
       "name": "Babushka's House",
-      "initDesc": "",
+      "examine": "",
       "desc": "A quaint house at the side of town.",
       "actors": [
         {
           "name": "Babushka",
           "desc": "An old lady that is known around town for making some absolutely great apple pies.",
           "examine": "An old lady stands before you idly sweeping her front porch. Her walking stick is resting next to the door frame",
-          "initDesc": "",
           "dialogues": [
             {
               "topic": "cat",
@@ -632,7 +677,6 @@
       "backgrounds": [
         {
           "name":"walking stick",
-          "initDesc": "",
           "invDesc": "",
           "desc": "",
           "examine": "a walking stick used to help identify objects in front of a person",
@@ -660,12 +704,12 @@
     },
     {
       "name": "alley",
-      "initDesc": "",
-      "desc": "",
+      "examine": "",
+      "desc": "A dark dirty alley probably used for drug trades and what not... or just storing trash bins.",
       "items": [
         {
           "name":"cat",
-          "initDesc": "an orange cat. its just sitting there, now is your chance, grab it!",
+          "examine": "an orange cat. its just sitting there, now is your chance, grab it!",
           "invDesc": "the cat occasionally struggles to free itself as you carry it",
           "desc": "",
           "weight": 0,
@@ -678,9 +722,9 @@
       "backgrounds": [
         {
           "name":"trash-can",
-          "initDesc": "",
+          "examine": "Its full of trash.",
           "invDesc": "",
-          "desc": "",
+          "desc": "a convenient means of storing trash",
           "weight": 0,
           "smell": "",
           "taste": "",
@@ -723,7 +767,7 @@
           "unkey": [
             ""
           ],
-          "makeVisible": [
+          "show": [
             {
               "name": "",
               "class": ""
@@ -744,7 +788,7 @@
           "unkey": [
             ""
           ],
-          "makeInvisible": [
+          "hide": [
             {
               "name": "cat",
               "class": "item"
@@ -765,7 +809,7 @@
     },
     {
       "name": "Market",
-      "initDesc": "",
+      "examine": "",
       "desc": "A bustling market in the middle of the town. There isn't much of interest here",
       "links": [
         {
@@ -785,7 +829,7 @@
     },
     {
       "name": "South Gate",
-      "initDesc": "",
+      "examine": "",
       "desc": "The south gate. permanently closed for security. you wonder why they even have a gate here if it is never open",
       "links": [
         {

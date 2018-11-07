@@ -36,11 +36,12 @@ class Parser:
         "move": ["go", "move", "walk", "run"],
         "direction": ["north", "south", "east", "west", "up", "down", "left", "right",
                       "n", "s", "e", "w", "u", "d", "l", "r"],
-        "look": ["look", "examine"],
-        "use": ["use"],
+        "look": ["look", "examine", "search"],
+        "use": ["use", "touch"],
         "talk": ["talk", "speak", "t"],
         "inventory": ["inv", "inventory"],
-        "key": ["key", "k"]
+        "key": ["key", "k"],
+        "map": ["map"]
     }
     player: Player
 
@@ -104,6 +105,15 @@ class Parser:
             self.commandList[2] = topic
         if verb == "move":
             direct_object = self.sp_link_name(direct_object, self.player.get_location().get_links(), 0.7)
+        if verb in ["look", "pickup"]:
+            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_item_list(), 0.7)
+        if verb in ["use"]:
+            direct_object = self.sp_entity_name(
+                direct_object,
+                self.player.get_location().get_item_list() + self.player.get_inventory(),
+                0.7)
+        if verb in ["drop"]:
+            direct_object = self.sp_entity_name(direct_object, self.player.get_inventory(), 0.7)
         return direct_object
 
     def collect_entity_list(self):
@@ -164,7 +174,7 @@ class Parser:
             word = key
         return word
 
-    # todo: verify this works properly with multi word topics
+    # these are for dialogues but events might be extended to include something else so keeping the name event for now
     @staticmethod
     def sp_event_name(word, event_list, threshold):
         # find closest actor name
@@ -239,22 +249,19 @@ class ScenarioBuilder:
         # when the player model gets too far away from the current, offer a new quest
         best_scene = self.choose_scenario()
         if best_scene == self.currentScene:
-            print("~~~everything is fine~~~")
+            # print("~~~everything is fine~~~")
             return False
         else:
             return True
 
     def update_model(self, command_array):
         action = command_array[0]
-        if action == "talk":
+        if action == "look" or action == "use":
+        # if action == "talk":
             self.playerModel[0] = (self.playerModel[0] * 2 + 1) / 3
-        if action == "move":
             self.playerModel[1] = (self.playerModel[1] * 2 + 1) / 3
-        if action == "pickup":
             self.playerModel[2] = (self.playerModel[2] * 2 + 1) / 3
-        if action == "look":
             self.playerModel[3] = (self.playerModel[3] * 2 + 1) / 3
-        if action == "use":
             self.playerModel[4] = (self.playerModel[4] * 2 + 1) / 3
 
     def reset_model(self):
@@ -292,11 +299,14 @@ class Scenario:
             new_room = Room(
                 name,
                 room_json["desc"] if "desc" in room_json else "",
-                room_json["initDesc"] if "initDesc" in room_json else ""
+                room_json["examineDesc"] if "examineDesc" in room_json else ""
             )
 
             if "items" in room_json:
                 for itemJSON in room_json["items"]:
+                    new_room.add_item(self.item_create(itemJSON))
+            if "backgrounds" in room_json:
+                for itemJSON in room_json["backgrounds"]:
                     new_room.add_item(self.item_create(itemJSON))
             if "actors" in room_json:
                 for actorJSON in room_json["actors"]:
@@ -319,11 +329,12 @@ class Scenario:
     def actor_create(self, actor_json):
         new_actor = Actor(
             actor_json["name"] if "name" in actor_json else "",
-            actor_json["initDesc"] if "initDesc" in actor_json else "",
+            actor_json["examineDesc"] if "examineDesc" in actor_json else "",
             actor_json["desc"] if "desc" in actor_json else ""
         )
-        if new_actor.get_name() == "":
+        if new_actor.get_name() in ["template", ""]:
             return None
+
         if "hidden" in actor_json:
             new_actor.hide()
 
@@ -336,6 +347,7 @@ class Scenario:
                                         dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
                                         dialogueJSON["topic"] if "topic" in dialogueJSON else "")
 
+                # get rid of empty entries.
                 for i in range(len(new_dialogue.whitelistKeys)):
                     if new_dialogue.whitelistKeys[i] == "":
                         new_dialogue.whitelistKeys.pop(i)
@@ -351,7 +363,7 @@ class Scenario:
     def item_create(self, item_json):
         new_item = Item(
             item_json["name"] if "name" in item_json else "",
-            item_json["initDesc"] if "initDesc" in item_json else "",
+            item_json["examine"] if "examine" in item_json else "",
             item_json["invDesc"] if "invDesc" in item_json else "",
             item_json["desc"] if "desc" in item_json else "",
             item_json["weight"] if "weight" in item_json else 0.0,
@@ -361,6 +373,37 @@ class Scenario:
             item_json["pickupable"] if "pickupable" in item_json else False,
             item_json["pickupKey"] if "pickupKey" in item_json else ""
         )
+
+        # get rid of templates
+        if new_item.get_name() in ["template", ""]:
+            return None
+
+        if "events" in item_json:
+            for eventJSON in item_json["events"]:
+                new_item.add_event(self.event_create(eventJSON))
+
+        if "hidden" in item_json:
+            new_item.hide()
+
+        self.itemList.append(new_item)
+        return new_item
+
+    def background_create(self, item_json):
+        new_item = Background(
+            item_json["name"] if "name" in item_json else "",
+            item_json["examine"] if "examine" in item_json else "",
+            item_json["invDesc"] if "invDesc" in item_json else "",
+            item_json["desc"] if "desc" in item_json else "",
+            item_json["weight"] if "weight" in item_json else 0.0,
+            item_json["smell"] if "smell" in item_json else "",
+            item_json["taste"] if "taste" in item_json else "",
+            item_json["size"] if "size" in item_json else "",
+        )
+
+        # get rid of templates
+        if new_item.get_name() in ["template", ""]:
+            return None
+
         if "hidden" in item_json:
             new_item.hide()
 
@@ -376,14 +419,16 @@ class Scenario:
             event_json["text"] if "text" in event_json else "",
             event_json["type"] if "type" in event_json else ""
         )
-        if "makeVisible" in event_json:
-            for visibleJSON in event_json["makeVisible"]:
+
+        # todo: instead of finding things by name later, find them now and store reference instead of name.
+        if "show" in event_json:
+            for visibleJSON in event_json["show"]:
                 new_event.add_make_visible([
                     visibleJSON["name"] if "name" in visibleJSON else "",
                     visibleJSON["class"] if "class" in visibleJSON else ""
                 ])
-        if "makeInvisible" in event_json:
-            for visibleJSON in event_json["makeInvisible"]:
+        if "hide" in event_json:
+            for visibleJSON in event_json["hide"]:
                 new_event.add_make_invisible([
                     visibleJSON["name"] if "name" in visibleJSON else "",
                     visibleJSON["class"] if "class" in visibleJSON else ""
@@ -433,16 +478,13 @@ class Display:
         self.print_list = []
 
     def display_room(self):
+        self.current_area()
         self.link_list()
         self.actor_list()
         self.item_list()
 
-    def talk(self, actor, topic):
-        if not actor.check_topic(topic, self.player.get_keys()):
-            self.add_print_list([[actor.get_name() + " does not know about this topic."]])
-            return
-        self.add_print_list([actor.get_name() + ": " + actor.speak_topic(topic, self.player)])
-
+    # todo replace with different functions for each functionality
+    # im already doing this pretty much, but when i want to reject a message i use this? put rejections in the others
     def confirm_command(self, text: str, status: bool = True, command: str = None, args: List[str] = None):
         # todo: figure out what to do here. do i even need this?
         print()
@@ -459,17 +501,29 @@ class Display:
 
         pass
 
-    def topics_list(self, actor):
-        topics_list = actor.get_topics_list(self.player.get_keys())
-        print_list = []
+    # todo use reject instead of else statements because i said so
+    def reject(self, text):
+        self.add_print_list([self.color_text(text, "red")])
 
-        for chatKey, chatEntry in topics_list.items():
-            print_list.append("\t" + self.color_text(chatEntry.get_topic(), "yellow"))
-        if print_list == "":
-            print_list.append(self.color_text("They don't want to talk.", "red"))
+    def look(self, entity: Entity):
+        if entity is not None:
+            self.add_print_list(
+                [
+                    self.color_text("you examine the " + entity.get_name() + " closely", "bold"),
+                    "\t" + entity.get_examine()
+                ]
+            )
         else:
-            print_list.insert(0, self.color_text(actor.get_name(), "blue") + " can talk about: ")
-        self.add_print_list(print_list)
+            self.reject("You look, you look but you cannot find that.")
+
+    def talk(self, actor, topic, accept=True):
+        if accept:
+            if not actor.check_topic(topic, self.player.get_keys()):
+                self.add_print_list([actor.get_name() + " does not know about this topic."])
+                return
+            self.add_print_list([actor.get_name() + ": " + actor.speak_topic(topic, self.player)])
+        else:
+            self.add_print_list([self.color_text("you talk into the aether to someone who isn't there", "red")])
 
     def inventory(self):
         if not self.player.get_inventory():
@@ -490,6 +544,43 @@ class Display:
         print_list.append("=" + ("-" * inventory_width) + "=")
 
         self.add_print_list(print_list)
+
+    @staticmethod
+    def map():
+        print("+ - - G - - + \n"
+              "| t g F b . | \n"
+              "| . a m . . | \n"
+              "+ - - G - - + \n"
+              " \n"
+              "G: gate \n"
+              "g: guild \n"
+              "F: starting fountain \n"
+              "b: babushka's house \n"
+              "t: tavern \n"
+              "m: market \n")
+
+    def event(self, text):
+        if text == "":
+            return
+        self.add_print_list([text])
+
+    def topics_list(self, actor):
+        topics_list = actor.get_topics_list(self.player.get_keys())
+        print_list = []
+
+        for chatKey, chatEntry in topics_list.items():
+            print_list.append("\t" + self.color_text(chatEntry.get_topic(), "yellow"))
+        if print_list == []:
+            print_list.append(self.color_text("They don't want to talk.", "red"))
+        else:
+            print_list.insert(0, self.color_text(actor.get_name(), "blue") + " can talk about: ")
+        self.add_print_list(print_list)
+
+    def current_area(self):
+        name = self.color_text(self.player.get_location().get_name(), "blue")
+        desc = self.player.get_location().get_desc()
+        self.add_print_list([self.color_text("You are at the ", "green") + name + ":",
+                             "\t" + desc])
 
     def actor_list(self):
         print_list = []
@@ -538,6 +629,8 @@ class Display:
             return BColors.WARNING + text + BColors.ENDC
         if color == "blue":
             return BColors.OKBLUE + text + BColors.ENDC
+        if color == "bold":
+            return BColors.BOLD + text + BColors.ENDC
         return text
 
     def break_text(self, text):
@@ -554,6 +647,13 @@ class Display:
         return print_text, line
 
 
+# todo: objectify act. turn each command into an object with functions for pre during and post.
+# then we can just call:
+# act.pre(commandList)
+# act.active(commandList)
+# act.post(commandList)
+# can roll event listener in there so the main loop stays clean
+# pre would probably just throw away the commandList but might use previous command. if we even need pre...
 def act(command, player: Player, display: Display):
     # do verb on object
     verb = command[0]
@@ -565,44 +665,51 @@ def act(command, player: Player, display: Display):
             print("you have picked up", target)
         else:
             display.confirm_command("you cannot pick that up", False)
-    elif verb == "drop":
+    elif verb == "place":
         attempt = player.drop(target)
         if attempt is not None:
             print("you have dropped", target)
         else:
             display.confirm_command("you do not have that item in your pockets", False)
     elif verb == "move":
-        event_listener("onLeave", player)
+        event_listener("onLeave", player, display)
         # todo: add check separate from action
         attempt = player.move(" ".join(filter(lambda x: len(x) > 0, command[1:])))
         if attempt is None:
             display.confirm_command("there is nothing in that direction", False)
         else:
             # todo: move leave to here, and add actual move in between on leave and and on enter.
-            event_listener("onEnter", player)
+            event_listener("onEnter", player, display)
     elif verb == "talk":
         topic = command[2]
         actor = player.get_actor(target)
         if actor is not None:
             if topic != "":
                 display.talk(actor, topic)
-                # player.talk(actor, topic)
-            display.topics_list(actor)
         else:
-            display.confirm_command("you talk into the aether to someone who isn't there", False)
+            display.talk(None, None, False)
     elif verb == "inventory":
         display.inventory()
         pass
     elif verb == "look":
-        pass
+        entity = player.get_location().get_item(target)
+        display.look(entity)
+        if entity is not None:
+            event_listener("onExamine", player, display, entity)
 
     elif verb == "use":
-        # the target is activated and key might be given (which then would activate event?)
-        pass
+        entity = player.get_location().get_item(target)
+        if entity is not None:
+            event_listener("onUse", player, display, entity)
+            pass
+        else:
+            display.reject("You cannot use that.")
     elif verb == "examine":
         pass
     elif verb == "key":
         print(player.get_keys())
+    elif verb == "map":
+        display.map()
     else:
         display.confirm_command("I do not understand that command", False)
 
@@ -610,8 +717,11 @@ def act(command, player: Player, display: Display):
 
 
 # todo: change print statement to use the display object.
-def event_listener(event_type, player):
-    events = player.get_location().get_events()
+def event_listener(event_type, player, display: Display, entity: Entity = None):
+    if entity is not None:
+        events = entity.get_events()
+    else:
+        events = player.get_location().get_events()
     current_keys = copy.copy(player.get_keys())
     for event in events:
         if event.get_type() == event_type:
@@ -621,7 +731,7 @@ def event_listener(event_type, player):
 
             if event.check_allowed(current_keys):
                 # print("event activated!")
-                print(event.activate(player))
+                display.event(event.activate(player))
             else:
                 # print("no event activated :(")
                 pass
@@ -643,8 +753,26 @@ def pre_act(player):
     return player
 
 
-def post_act(player: Player, display: Display):
+# todo fix babushka not giving correct options the first time she answers a topic.
+# talk b c
+# prints
+# Babushka can talk about:
+# 	cat
+# instead of
+# Babushka can talk about:
+# 	cat
+#   description
+def post_act(command, player: Player, display: Display):
     player.update_keyring()
+
+    if command is None:
+        command = ["", ""]
+    verb = command[0]
+    target = command[1]
+    if verb == "talk":
+        actor = player.get_actor(target)
+        if actor is not None:
+            display.topics_list(actor)
     display.display_room()
     display.print()
     pass
@@ -683,8 +811,8 @@ def main():
         display = Display(player)
 
         # have the player enter the room officially.
-        event_listener("onEnter", player)
-        post_act(player, display)
+        event_listener("onEnter", player, display)
+        post_act(None, player, display)
 
         while not win_condition(player):
             # TODO: implement pre/in/post act functions
@@ -705,15 +833,11 @@ def main():
             # dm.print_model()
 
             # interpret input
-            # command_array = parseInput(command, player)
-            # act on input and display
 
             act(command_array, player, display)
-            event_listener("active", player)
+            event_listener("active", player, display)
 
-            # postAct(command_array, player)
-
-            post_act(player, display)
+            post_act(command_array, player, display)
 
         # give the player some blank space to look at
         input("Press enter to continue...")

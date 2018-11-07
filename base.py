@@ -66,7 +66,8 @@ class Room:
         return None
 
     def add_event(self, event):
-        self.events.append(event)
+        if event:
+            self.events.append(event)
 
     def get_events(self):
         return self.events
@@ -155,7 +156,6 @@ class Player:
             self.keyring.remove(key)
         self.removed_keys = []
 
-
     def add_key(self, key):
         if key not in self.keyring:
             self.added_keys.append(key)
@@ -164,7 +164,7 @@ class Player:
 
     def remove_key(self, key):
         if key in self.keyring:
-            self.removed_keys.remove(key)
+            self.removed_keys.append(key)
             return len(self.keyring)
         return None
 
@@ -206,7 +206,7 @@ class Link:
     def get_visible(self):
         return self.visible
 
-    def set_visible(self,visibility):
+    def set_visible(self, visibility):
         self.visible = visibility
 
     def hide(self):

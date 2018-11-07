@@ -6,24 +6,25 @@ from event import *
 class Entity:
     name: str
     description: str
-    init_description: str
-    firstLook: bool
+    examine_desc: str
     visible: bool
+    events: List[Event]
     inventory: List[Item]
 
-    def __init__(self, name, init_desc, desc):
+    def __init__(self, name, examine_desc, desc):
         self.name = name
         self.description = desc
-        self.init_description = init_desc
-        self.firstLook = True
+        self.examine_desc = examine_desc
         self.visible = True
+        self.events = []
 
     def get_desc(self):
         if not self.visible:
             return ""
-        if self.firstLook:
-            return self.init_description
         return self.description
+
+    def get_examine(self):
+        return self.examine_desc
 
     def get_name(self):
         return self.name
@@ -36,6 +37,13 @@ class Entity:
 
     def show(self):
         self.visible = True
+
+    def add_event(self, event):
+        if event:
+            self.events.append(event)
+
+    def get_events(self):
+        return self.events
 
     def add_to_inventory(self, thing):
         # append item to inventory list
@@ -64,8 +72,8 @@ class Item(Entity):
     pickupable: bool
     pickupKey: str
 
-    def __init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size, pickupable, pickup_key):
-        Entity.__init__(self, name, init_desc, desc)
+    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size, pickupable, pickup_key):
+        Entity.__init__(self, name, examine_desc, desc)
         self.inventory_desc = inv_desc
         self.weight = weight
         self.smell = smell
@@ -97,21 +105,21 @@ class Item(Entity):
 
 
 class Background(Item):
-    def __init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size):
-        Item.__init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size, False, "")
+    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size):
+        Item.__init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size, False, "")
 
 
 class Container(Background):
 
-    def __init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size):
-        Background.__init__(self, name, init_desc, inv_desc, desc, weight, smell, taste, size)
+    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size):
+        Background.__init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size)
 
 
 class Actor(Entity):
     dialogueList: Dict[str, Dialogue]
 
-    def __init__(self, name, init_desc, desc, ):
-        Entity.__init__(self, name, init_desc, desc)
+    def __init__(self, name, examine_desc, desc, ):
+        Entity.__init__(self, name, examine_desc, desc)
         self.dialogueList = {}
 
     def add_dialogue(self, chat: Dialogue):
