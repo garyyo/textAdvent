@@ -471,7 +471,7 @@
     {
       "name": "tavern interior",
       "examine": "",
-      "desc": "a large tavern. several travelers and locals sit around merrily drinking and chatting.",
+      "desc": "A large tavern. several travelers and locals sit around merrily drinking and chatting.",
       "actors": [
         {
           "name": "Bartender",
