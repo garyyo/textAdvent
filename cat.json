@@ -499,8 +499,8 @@
 
         {
           "name": "spooky dude",
-          "desc": "a dude sitting in the corner, almost invisible",
-          "examine": "a truly spooky dude.",
+          "desc": "A dude sitting in the corner, almost invisible",
+          "examine": "A truly spooky dude.",
           "hidden": true,
           "dialogues": [
             {
