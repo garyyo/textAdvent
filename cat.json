@@ -236,13 +236,13 @@
     },
     {
       "name": "North Gate",
-      "examine": "the north gate of town stands tall in front of you. its not actually that tall, about 3 meters, but its also not that big of a town",
+      "examine": "The north gate of town stands tall in front of you. It isn't actually that tall, about 3 meters, but its also not that big of a town",
       "desc": "",
       "actors": [
         {
-          "name": "guard",
-          "desc": "a sleepy guard",
-          "examine": "a sleepy guard",
+          "name": "Guard",
+          "desc": "A sleepy guard",
+          "examine": "They sleep a light sleep that sleeps light",
           "dialogues": [
             {
               "topic": "cat",
@@ -258,7 +258,7 @@
             },
             {
               "topic": "orange cat",
-              "text": "you know, i think i do remember seeing someone chasing around an orange cat. some creepy old dude, wore a red cloak. you should ask the bartender down at tavern, he seems to know just about everyone in this town",
+              "text": "You know, I think I do remember seeing someone chasing around an orange cat. Some creepy old dude, wore a red cloak. you should ask the bartender down at tavern, he seems to know just about everyone in this town",
               "whitelist": [
                 "catQuest-clue-orange"
               ],
