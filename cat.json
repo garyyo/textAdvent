@@ -513,7 +513,7 @@
             },
             {
               "topic": "old lady cat",
-              "text": "You: I didnt say anything about the cat belonging to an old lady. \n SpookyDude: Yeah fine I do know something about her cat. Why, what do you want with the cat?",
+              "text": "You: I didn't say anything about the cat belonging to an old lady. \n SpookyDude: Yeah fine I do know something about her cat. Why, what do you want with the cat?",
               "whitelist": ["spooky-dude-cat"],
               "blacklist": ["spooky-dude-cat-unlocked"],
               "key": ["spooky-dude-cat-unlocked"],
