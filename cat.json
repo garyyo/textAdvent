@@ -203,7 +203,7 @@
         {
           "name":"bush",
           "examine": "Its a thick bush, you might be able to fit into it",
-          "desc": "A great green bush, wrapping its way around the town walls. who takes care of it?",
+          "desc": "A great green bush, wrapping its way around the town walls. Who takes care of it?",
           "weight": 0,
           "smell": "",
           "taste": "",
