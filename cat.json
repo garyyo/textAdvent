@@ -245,7 +245,7 @@
           "examine": "They sleep a light sleep that sleeps light",
           "dialogues": [
             {
-              "topic": "cat",
+              "topic": "Cat",
               "text": "I have seen many cats come and go through this gate dude, you gotta be a little bit more specific",
               "whitelist": [
                 "catQuest"
@@ -257,7 +257,7 @@
               "unkey": []
             },
             {
-              "topic": "orange cat",
+              "topic": "Orange cat",
               "text": "You know, I think I do remember seeing someone chasing around an orange cat. Some creepy old dude, wore a red cloak. you should ask the bartender down at tavern, he seems to know just about everyone in this town",
               "whitelist": [
                 "catQuest-clue-orange"
@@ -273,29 +273,13 @@
         {
           "name":"Guard's keys",
           "examine": "The keys of the guard. Perhaps its best to leave them alone",
-          "invDesc": "guards keys, I wonder what they unlock",
+          "invDesc": "Guards keys, I wonder what they unlock",
           "desc": "keys hanging off the belt of the guard",
           "weight": 0,
           "smell": "",
           "taste": "",
           "pickupable": false,
           "pickupKey": "guard-keys"
-        }
-      ],
-      "events": [
-        {
-          "text": "you entered!",
-          "type": "onEnter",
-          "whitelist": [],
-          "blacklist": [],
-          "key": [],
-          "unkey": [],
-          "show": [
-            {
-              "name": "",
-              "class": ""
-            }
-          ]
         }
       ],
       "links": [
@@ -333,7 +317,7 @@
       ],
       "backgrounds": [
         {
-          "name":"fountain",
+          "name":"Fountain",
           "examine": "A large fountain that stands in the center of the town. ",
           "desc": "It pours water all over itself. How presumptuous",
           "weight": 0,
