@@ -462,7 +462,6 @@ class Display:
     def __init__(self, player):
         self.player = player
         self.print_list = []
-        pass
 
     def add_print_list(self, print_list):
         self.print_list.append(print_list)
@@ -530,15 +529,25 @@ class Display:
             return
         print_list = []
         inventory_width = 5 + len(max(self.player.get_inventory(), key=lambda x: len(x.get_inv_desc())).get_inv_desc())
+        inventory_width = min(inventory_width,self.display_width-5)
         print_list.append("=" + ("-" * int(inventory_width)) + "=")
         print_list.append("|" + (" " * int(inventory_width)) + "|")
         item_num = 0
         for item in self.player.get_inventory():
+            line = item.get_inv_desc()
             item_num += 1
-            d = " " + str(item_num) + ": " + item.get_inv_desc()
-            d_length = len(d)
-            d_spaced = d + (math.floor((inventory_width - d_length)) * " ")
-            print_list.append("|" + d_spaced + "|")
+            first_time = True
+            while len(line) > 0:
+                # 8 is a magic number of just counting up all the characters in front and behind print_line
+                print_line, line = self.break_text(line, inventory_width - 8)
+                if not first_time:
+                    d = "    " + print_line
+                else:
+                    d = " " + str(item_num) + ": " + print_line
+                    first_time = False
+                d_length = len(d)
+                d_spaced = d + (math.floor((inventory_width - d_length)) * " ")
+                print_list.append("|" + d_spaced + "|")
 
         print_list.append("|" + (" " * inventory_width) + "|")
         print_list.append("=" + ("-" * inventory_width) + "=")
@@ -633,17 +642,21 @@ class Display:
             return BColors.BOLD + text + BColors.ENDC
         return text
 
-    def break_text(self, text):
-        # search for a space from self.display_width backwards
-        if len(text) < self.display_width:
+    def break_text(self, text, line_width=None):
+        if line_width is None:
+            line_width = self.display_width
+        # search for a space from line_width backwards
+        if len(text) < line_width:
             return text, ""
-        if "\n" in text[:self.display_width]:
-            index = text[:self.display_width + 1].rfind("\n")
-            print_text = text[:index].strip()
+        if "\n" in text[:line_width]:
+            index = text[:line_width + 1].rfind("\n")
+            print_text = text[:index].rstrip()
         else:
-            index = text[:self.display_width + 1].rfind(" ")
-            print_text = text[:index].strip()
+            index = text[:line_width + 1].rfind(" ")
+            print_text = text[:index].rstrip()
         line = text[index + 1:]
+        if print_text[0] == "\t":
+            line = "\t" + line
         return print_text, line
 
 
@@ -801,7 +814,7 @@ def main():
 
     dm = ScenarioBuilder()
 
-    testCases = [
+    test_cases = [
         [
             "e",
             "t b c",
@@ -833,10 +846,12 @@ def main():
             "n",
             "t g o",
             "n",
-            "look at the bush"
+            "look at the bush",
+            "pickup b",
+            "inv"
         ]
     ]
-    testCaseNum = 2
+    test_case_num = 2
     testing = True
     while True:
         scene = dm.get_scenario()
@@ -857,8 +872,8 @@ def main():
             # current state of pre act function
 
             # input
-            if len(testCases[testCaseNum]) > 0 and testing:
-                command = testCases[testCaseNum].pop(0)
+            if len(test_cases[test_case_num]) > 0 and testing:
+                command = test_cases[test_case_num].pop(0)
                 print(">", command)
             else:
                 command = input("> ")

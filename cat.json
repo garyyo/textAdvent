@@ -189,7 +189,7 @@
         {
           "name":"Babushka's cat",
           "examine": "an orange cat. its just sitting there, now is your chance, grab it!",
-          "invDesc": "the cat occasionally struggles to free itself as you carry it",
+          "invDesc": "an orange cat. it occasionally struggles to try to free itself as you carry it, but quickly gives up",
           "desc": "a quiet orange cat.",
           "weight": 0,
           "smell": "",

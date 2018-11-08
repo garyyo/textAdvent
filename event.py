@@ -1,4 +1,5 @@
 from __future__ import annotations
+# noinspection PyUnresolvedReferences
 from typing import List
 from base import *
 
@@ -47,7 +48,7 @@ class Event:
                 if location.get_item(name):
                     location.get_item(name).hide()
             if class_type == "link":
-                link = filter(lambda x: x.get_room_name() == name,location.get_links())[0]
+                link = next(filter(lambda x: x.get_room_name() == name, location.get_links()))
                 if link:
                     link.hide()
 

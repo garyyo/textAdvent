@@ -61,7 +61,7 @@ class Room:
 
     def get_item(self, item_name):
         for item in self.items:
-            if item.get_name().lower() == item_name:
+            if item.get_name().lower() == item_name.lower():
                 return item
         return None
 
