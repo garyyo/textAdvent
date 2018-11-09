@@ -95,18 +95,21 @@ class Parser:
 
         # if player misspelled actor name
         if verb == "talk" and direct_object:
-            actor = self.player.get_location().get_actor(direct_object)
+            actor = self.player.get_location().get_actor_visible(direct_object)
             topic = " ".join(filter(lambda x: len(x) > 0, self.commandList[2:]))
             if actor is None:
                 direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_list(), 0.7)
-                actor = self.player.get_location().get_actor(direct_object)
+                actor = self.player.get_location().get_actor_visible(direct_object)
             if actor and not actor.check_topic(topic, self.player.get_keys()):
                 topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
             self.commandList[2] = topic
         if verb == "move":
             direct_object = self.sp_link_name(direct_object, self.player.get_location().get_links(), 0.7)
-        if verb in ["look", "pickup"]:
+        if verb in ["pickup"]:
             direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_item_list(), 0.7)
+        if verb in ["look"]:
+            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_item_list() +
+                                                self.player.get_location().get_actors_list(), 0.7)
         if verb in ["use"]:
             direct_object = self.sp_entity_name(
                 direct_object,
@@ -141,6 +144,8 @@ class Parser:
             return ""
         correct_list = {}
         for entity in entity_list:
+            if not entity.get_visible():
+                continue;
             entity_name = entity.get_name()
             character_length = min(len(entity_name), len(word))
             counter = 0
@@ -329,7 +334,7 @@ class Scenario:
     def actor_create(self, actor_json):
         new_actor = Actor(
             actor_json["name"] if "name" in actor_json else "",
-            actor_json["examineDesc"] if "examineDesc" in actor_json else "",
+            actor_json["examine"] if "examine" in actor_json else "",
             actor_json["desc"] if "desc" in actor_json else ""
         )
         if new_actor.get_name() in ["template", ""]:
@@ -423,13 +428,14 @@ class Scenario:
         # todo: instead of finding things by name later, find them now and store reference instead of name.
         if "show" in event_json:
             for visibleJSON in event_json["show"]:
-                new_event.add_make_visible([
+
+                new_event.add_show([
                     visibleJSON["name"] if "name" in visibleJSON else "",
                     visibleJSON["class"] if "class" in visibleJSON else ""
                 ])
         if "hide" in event_json:
             for visibleJSON in event_json["hide"]:
-                new_event.add_make_invisible([
+                new_event.add_hide([
                     visibleJSON["name"] if "name" in visibleJSON else "",
                     visibleJSON["class"] if "class" in visibleJSON else ""
                 ])
@@ -568,6 +574,9 @@ class Display:
               "t: tavern \n"
               "m: market \n")
 
+    def keys(self):
+        print(self.player.get_keys())
+
     def event(self, text):
         if text == "":
             return
@@ -643,8 +652,13 @@ class Display:
         return text
 
     def break_text(self, text, line_width=None):
+        # the inventory function requires a custom line length, but the normal print does not.
         if line_width is None:
             line_width = self.display_width
+
+        # since a tab is for spaces but only counts as one character, adjust line width accordingly
+        for _ in range(text.count("\t")):
+            line_width -= 3
         # search for a space from line_width backwards
         if len(text) < line_width:
             return text, ""
@@ -655,6 +669,7 @@ class Display:
             index = text[:line_width + 1].rfind(" ")
             print_text = text[:index].rstrip()
         line = text[index + 1:]
+        # if the line started with a tab the subsequent ones should too
         if print_text[0] == "\t":
             line = "\t" + line
         return print_text, line
@@ -695,7 +710,7 @@ def act(command, player: Player, display: Display):
             event_listener("onEnter", player, display)
     elif verb == "talk":
         topic = command[2]
-        actor = player.get_actor(target)
+        actor = player.get_location().get_actor_visible(target)
         if actor is not None:
             if topic != "":
                 display.talk(actor, topic)
@@ -706,6 +721,8 @@ def act(command, player: Player, display: Display):
         pass
     elif verb == "look":
         entity = player.get_location().get_item(target)
+        if entity is None:
+            entity = player.get_location().get_actor_visible(target)
         display.look(entity)
         if entity is not None:
             event_listener("onExamine", player, display, entity)
@@ -720,7 +737,7 @@ def act(command, player: Player, display: Display):
     elif verb == "examine":
         pass
     elif verb == "key":
-        print(player.get_keys())
+        display.keys()
     elif verb == "map":
         display.map()
     else:
@@ -783,7 +800,7 @@ def post_act(command, player: Player, display: Display):
     verb = command[0]
     target = command[1]
     if verb == "talk":
-        actor = player.get_actor(target)
+        actor = player.get_location().get_actor_visible(target)
         if actor is not None:
             display.topics_list(actor)
     display.display_room()
@@ -849,9 +866,18 @@ def main():
             "look at the bush",
             "pickup b",
             "inv"
+        ],
+        [
+            "e",
+            "t b c",
+            "w",
+            "w",
+            "t b c",
+            "e",
+            "s"
         ]
     ]
-    test_case_num = 2
+    test_case_num = 3
     testing = True
     while True:
         scene = dm.get_scenario()

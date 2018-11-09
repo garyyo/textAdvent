@@ -417,6 +417,14 @@
               "blacklist": [],
               "key": [],
               "unkey": []
+            },
+            {
+              "topic": "cat location",
+              "text": "I heard of a merchant hanging around the market that deals with cats and cat based things. Perhaps they may be able to assist.",
+              "whitelist": ["catQuest"],
+              "blacklist": [],
+              "key": ["catQuest-merchant"],
+              "unkey": []
             }
           ]
         }
@@ -794,7 +802,28 @@
     {
       "name": "Market",
       "examine": "",
-      "desc": "A bustling market in the middle of the town. There isn't much of interest here",
+      "desc": "A bustling market in the middle of the town. This is a test of really long lines of text. the purpose of this test is to find out if the line is correctly wrapped, and if it is, then to also find if things are proerly tabbed. Some efforts need to be made to make sure that tabs are not interfering with max line length, though at the moment they dont",
+      "actors": [
+        {
+          "name": "Cat peddler",
+          "desc": "This guy is covered in cats and cat related objects.",
+          "examine": "The stench of cat penetrates your nostrils as you look in his direction. It emanates from the fellow like an aura, but of cats. He is covered in cat merchandise but what is more interesting is the swarm of cats that seem to be swarming around him as he walks, as if they are his personal guards. Might be all the catnip on his person.",
+          "hidden": true
+        }
+      ],
+      "events": [
+        {
+          "text": "You spot The cat merchant that Bron told you about. He is an interesting fellow, covered in all sorts of cat merchandise like toys and clay jars labeled catnip. cats swarm around and on him as if they want to consume him, but are just waiting for the right moment. the rest of this passage is used to test line wrapping and proper tabbing. these should not be tabbed over, but should match the line length shown below.",
+          "type": "onEnter",
+          "whitelist": ["catQuest-merchant"],
+          "show": [
+            {
+              "name": "Cat peddler",
+              "class": "actor"
+            }
+          ]
+        }
+      ],
       "links": [
         {
           "roomName": "fountain",

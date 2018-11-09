@@ -31,7 +31,7 @@ class Room:
 
     def get_items_index(self, item_name: str) -> int:
         for i in range(len(self.items)):
-            if self.items[i].get_name().lower() == item_name:
+            if self.items[i].get_name().lower() == item_name.lower():
                 return i
 
     def get_item_ref(self, index):
@@ -54,6 +54,12 @@ class Room:
             self.actors.append(actor)
 
     def get_actor(self, actor_name):
+        for actor in self.actors:
+            if actor.get_name().lower() == actor_name.lower():
+                return actor
+        return None
+
+    def get_actor_visible(self, actor_name):
         for actor in self.actors:
             if actor.get_name().lower() == actor_name.lower() and actor.get_visible():
                 return actor
@@ -93,7 +99,7 @@ class Player:
     added_keys: List[str]
     removed_keys: List[str]
 
-    def __init__(self, start_location, starting_keys):
+    def __init__(self, start_location: Room, starting_keys):
         self.location = start_location
         self.inventory = []
         self.conditions = []
@@ -178,9 +184,6 @@ class Player:
                 self.location = place.get_location()
                 return True
         return None
-
-    def get_actor(self, actor_name):
-        return self.location.get_actor(actor_name)
 
     def talk(self, actor, topic):
         if not actor.check_topic(topic, self.get_keys()):

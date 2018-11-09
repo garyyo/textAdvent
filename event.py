@@ -42,8 +42,8 @@ class Event:
             name = ref[0]
             class_type = ref[1]
             if class_type == "actor":
-                if location.get_actor(name):
-                    location.get_actor(name).hide()
+                if location.get_actor_visible(name):
+                    location.get_actor_visible(name).hide()
             if class_type == "item":
                 if location.get_item(name):
                     location.get_item(name).hide()
@@ -76,10 +76,10 @@ class Event:
     def get_keys(self):
         return self.giveKeys, self.takeKeys
 
-    def add_make_visible(self, visibility_list):
+    def add_show(self, visibility_list):
         self.makeVisible.append(visibility_list)
 
-    def add_make_invisible(self, visibility_list):
+    def add_hide(self, visibility_list):
         self.makeInvisible.append(visibility_list)
 
     def get_make_visible(self):
