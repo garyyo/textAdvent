@@ -662,7 +662,7 @@ class Display:
         for _ in range(text.count("\t")):
             line_width -= 3
 
-        # if newline then thats where we split
+        # if newline then that's where we split
         if "\n" in text[:line_width]:
             index = text[:line_width + 1].rfind("\n")
             print_text = text[:index].rstrip()
