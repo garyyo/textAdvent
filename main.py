@@ -461,7 +461,7 @@ class Scenario:
 
 class Display:
     player: Player
-    display_width = 100
+    display_width = 150
     print_list: List[List[str]]
 
     # pass in arbitrary objects and get proper formatting for their description.
@@ -526,7 +526,8 @@ class Display:
             if not actor.check_topic(topic, self.player.get_keys()):
                 self.add_print_list([actor.get_name() + " does not know about this topic."])
                 return
-            self.add_print_list([actor.get_name() + ": " + actor.speak_topic(topic, self.player)])
+            self.add_print_list([self.color_text(actor.get_name(), "blue") + " starts to respond:"])
+            self.add_print_list(["\t" + actor.speak_topic(topic, self.player)])
         else:
             self.add_print_list([self.color_text("you talk into the aether to someone who isn't there", "red")])
 
@@ -651,6 +652,7 @@ class Display:
             return BColors.BOLD + text + BColors.ENDC
         return text
 
+    # todo: this is like asking to be a recursive function. i cant see any downsides
     def break_text(self, text, line_width=None):
         # the inventory function requires a custom line length, but the normal print does not.
         if line_width is None:
@@ -659,19 +661,25 @@ class Display:
         # since a tab is for spaces but only counts as one character, adjust line width accordingly
         for _ in range(text.count("\t")):
             line_width -= 3
-        # search for a space from line_width backwards
-        if len(text) < line_width:
-            return text, ""
+
+        # if newline then thats where we split
         if "\n" in text[:line_width]:
             index = text[:line_width + 1].rfind("\n")
             print_text = text[:index].rstrip()
+
         else:
+            # if the text is less than the line width, you just return.
+            if len(text) < line_width:
+                return text, ""
+
             index = text[:line_width + 1].rfind(" ")
             print_text = text[:index].rstrip()
+
         line = text[index + 1:]
         # if the line started with a tab the subsequent ones should too
-        if print_text[0] == "\t":
+        if text[0] == "\t":
             line = "\t" + line
+
         return print_text, line
 
 
@@ -874,7 +882,9 @@ def main():
             "w",
             "t b c",
             "e",
-            "s"
+            "s",
+            "examine c",
+            "t c c"
         ]
     ]
     test_case_num = 3
