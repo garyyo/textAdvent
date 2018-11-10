@@ -197,6 +197,14 @@
           "pickupable": true,
           "pickupKey": "catQuest-get-cat",
           "hidden": true
+        },
+        {
+          "name":"Stick",
+          "examine": "An ordinary stick, perhaps you could fashion some sort of cat toy out of this? it might be better suited for a dog toy though.",
+          "invDesc": "A stick. Its brown and like a stick",
+          "desc": "A stick lying on the ground",
+          "pickupable": true,
+          "pickupKey": "got-stick"
         }
       ],
       "backgrounds": [
@@ -215,10 +223,10 @@
                 "catQuest"
               ],
               "blacklist": [
-                ""
+                "catQuest-cat-found"
               ],
               "key": [
-                ""
+                "catQuest-cat-found"
               ],
               "unkey": [
                 ""
@@ -737,7 +745,8 @@
             "catQuest-get-cat"
           ],
           "key": [
-            "cat-saunter-first"
+            "cat-saunter-first",
+            "catQuest-cat-found"
           ],
           "unkey": [
             ""
@@ -772,13 +781,14 @@
             ""
           ],
           "blacklist": [
-            "catQuest-get-cat"
+            "catQuest-get-cat",
+            "cat-left-alley"
           ],
           "key": [
             "cat-left-alley"
           ],
           "unkey": [
-            ""
+            "catQuest-cat-found"
           ],
           "hide": [
             {
@@ -833,8 +843,38 @@
               "blacklist": [],
               "key": [],
               "unkey": []
+            },
+            {
+              "topic": "Wares",
+              "text": "What do you need? I got catnip for 20 gold, cat toys for 10, and of course cats. the price of the cats depends on on the cat of course",
+              "whitelist": ["catQuest"],
+              "blacklist": [],
+              "key": ["catQuest-merchant-wares"],
+              "unkey": []
+            },
+            {
+              "topic": "buy catnip",
+              "text": "One single bag of delicious catnip coming up",
+              "whitelist": ["catQuest-merchant-wares"],
+              "blacklist": [],
+              "key": [],
+              "unkey": [],
+              "show": [
+                {
+                  "name": "catnip",
+                  "class": "item"
+                }
+              ],
+              "cost": 20
             }
+
           ]
+        }
+      ],
+      "items": [
+        {
+          "name": "catnip",
+          "desc": "its a bag of catnip, purchased from the smelly cat merchant"
         }
       ],
       "events": [
@@ -882,5 +922,6 @@
   ],
   "startingKeys":[
     "alive"
-  ]
+  ],
+  "initialGold": 10
 }

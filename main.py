@@ -262,7 +262,6 @@ class ScenarioBuilder:
     def update_model(self, command_array):
         action = command_array[0]
         if action == "look" or action == "use":
-        # if action == "talk":
             self.playerModel[0] = (self.playerModel[0] * 2 + 1) / 3
             self.playerModel[1] = (self.playerModel[1] * 2 + 1) / 3
             self.playerModel[2] = (self.playerModel[2] * 2 + 1) / 3
@@ -456,7 +455,9 @@ class Scenario:
 
     def get_player(self):
         starting_keys = self.jsonData["startingKeys"] if "startingKeys" in self.jsonData else []
-        return Player(self.roomList[self.start_location], starting_keys)
+        player = Player(self.roomList[self.start_location], starting_keys)
+        player.add_gold(self.jsonData["initialGold"] if "initialGold" in self.jsonData else 0)
+        return player
 
 
 class Display:
@@ -532,13 +533,25 @@ class Display:
             self.add_print_list([self.color_text("you talk into the aether to someone who isn't there", "red")])
 
     def inventory(self):
-        if not self.player.get_inventory():
-            return
+        margin_width = 8
         print_list = []
-        inventory_width = 5 + len(max(self.player.get_inventory(), key=lambda x: len(x.get_inv_desc())).get_inv_desc())
-        inventory_width = min(inventory_width,self.display_width-5)
+
+        gold_text = " gold: " + str(self.player.get_gold())
+        gold_text_length = len(gold_text)
+
+        if self.player.get_inventory():
+            max_item = max(self.player.get_inventory(), key=lambda x: len(x.get_inv_desc())+len(x.get_name()))
+            inventory_width = margin_width + len(max_item.get_inv_desc()) + len(max(max_item.get_name()))
+            inventory_width = min(inventory_width,self.display_width + margin_width)
+        else:
+            inventory_width = gold_text_length+1
+
+        gold_text_spaced = gold_text + (math.floor((inventory_width - gold_text_length)) * " ")
+
         print_list.append("=" + ("-" * int(inventory_width)) + "=")
+        print_list.append("|" + gold_text_spaced + "|")
         print_list.append("|" + (" " * int(inventory_width)) + "|")
+
         item_num = 0
         for item in self.player.get_inventory():
             line = item.get_inv_desc()
@@ -546,11 +559,11 @@ class Display:
             first_time = True
             while len(line) > 0:
                 # 8 is a magic number of just counting up all the characters in front and behind print_line
-                print_line, line = self.break_text(line, inventory_width - 8)
+                print_line, line = self.break_text(line, inventory_width)
                 if not first_time:
                     d = "    " + print_line
                 else:
-                    d = " " + str(item_num) + ": " + print_line
+                    d = " " + item.get_name() + ": " + print_line
                     first_time = False
                 d_length = len(d)
                 d_spaced = d + (math.floor((inventory_width - d_length)) * " ")
@@ -885,9 +898,15 @@ def main():
             "s",
             "examine c",
             "t c c"
+        ],
+        [
+            "n",
+            "n",
+            "grab s",
+            "inv"
         ]
     ]
-    test_case_num = 3
+    test_case_num = 1
     testing = True
     while True:
         scene = dm.get_scenario()

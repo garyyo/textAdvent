@@ -98,6 +98,7 @@ class Player:
     keyring: List[str]
     added_keys: List[str]
     removed_keys: List[str]
+    gold: int
 
     def __init__(self, start_location: Room, starting_keys):
         self.location = start_location
@@ -106,6 +107,7 @@ class Player:
         self.keyring = starting_keys
         self.added_keys = []
         self.removed_keys = []
+        self.gold = 0
 
     def get_location(self):
         return self.location
@@ -150,6 +152,15 @@ class Player:
         # append item to inventory list
         self.inventory.append(thing)
         pass
+
+    def add_gold(self, gold):
+        self.gold += gold
+
+    def remove_gold(self, gold):
+        self.gold -= gold
+
+    def get_gold(self):
+        return self.gold
 
     def remove_from_inventory(self, index):
         return self.inventory.pop(index)
