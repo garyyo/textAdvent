@@ -107,3 +107,16 @@ use market for traveling cat merchant.
     to swap maybe spooky man tells you that the cat he gave to cat merchant is not the right cat. leads you to the right cat
 
 do the cat rain dance to rain cats and try to find the correct one.
+
+
+
+todo: should rooms have keys like players? this would help in keeping track of rooms and not just keepin track of players?
+events would then also need to check room keys.
+alternatively have the onDrop event activate for an item which would add a key to the player that would activate another event
+
+todo: rooms and maybe other things have unique keyword actions assigned to them.
+like hide, outside the gate when you set a baited trap for the cat you can hide to "activate" that event.
+idea: have events with arbitrary flag. when active the event listener looks to see if the command matched with the event type.
+then do all the things the event does.
+
+instead of printing (i dont know how to do that), activate the event listener on the command word. only if the command is not a valid event name already...
