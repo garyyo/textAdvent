@@ -120,3 +120,21 @@ idea: have events with arbitrary flag. when active the event listener looks to s
 then do all the things the event does.
 
 instead of printing (i dont know how to do that), activate the event listener on the command word. only if the command is not a valid event name already...
+the rest of the words after the command are used to add to a sort of keylist? maybe have this one separate from the normal one?
+
+presentation notes:
+introduce the idea of a drama management.
+
+games
+why people play games
+why people replay games, or why they dont replay games
+games should be tweaked to the players interests
+
+how do we tweak this considering that every player is different.
+we can just provide enough paths for the player to take so they can choose themselves,
+but players may not know what they want or when they should switch.
+
+in comes our system
+given a story that the player can play through we give the player a number of paths that they can choose
+from each path there are links to other t
+

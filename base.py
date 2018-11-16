@@ -21,6 +21,9 @@ class Room:
         self.items = []
         self.actors = []
         self.events = []
+        self.added_keys = []
+        self.removed_keys = []
+        self.keyring = []
 
     def add_item(self, item):
         if item:
@@ -77,6 +80,26 @@ class Room:
 
     def get_events(self):
         return self.events
+
+    def update_keyring(self):
+        for key in self.added_keys:
+            self.keyring.append(key)
+        self.added_keys = []
+        for key in self.removed_keys:
+            self.keyring.remove(key)
+        self.removed_keys = []
+
+    def add_key(self, key):
+        if key not in self.keyring:
+            self.added_keys.append(key)
+            return len(self.keyring)
+        return None
+
+    def remove_key(self, key):
+        if key in self.keyring:
+            self.removed_keys.append(key)
+            return len(self.keyring)
+        return None
 
     def get_links(self):
         return list(filter(lambda x: x.get_visible(), self.links))

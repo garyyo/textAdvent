@@ -13,11 +13,13 @@ class Event:
     makeVisible: []
     makeInvisible: []
 
-    def __init__(self, whitelist, blacklist, key, unkey, event_text, event_type):
+    def __init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, event_text, event_type):
         self.whitelistKeys = whitelist
         self.blacklistKeys = blacklist
         self.giveKeys = key
         self.takeKeys = unkey
+        self.giveKeysRoom = key_room
+        self.takeKeysRoom = unkey_room
         self.text = event_text
         self.type = event_type
         self.makeVisible = []
@@ -56,6 +58,10 @@ class Event:
             player.add_key(key)
         for key in self.takeKeys:
             player.remove_key(key)
+        for key in self.giveKeysRoom:
+            player.get_location().add_key(key)
+        for key in self.takeKeysRoom:
+            player.get_location().remove_key(key)
 
         return self.text
 
@@ -90,8 +96,8 @@ class Event:
 
 
 class Dialogue(Event):
-    def __init__(self, whitelist, blacklist, key, unkey, text, topic):
-        Event.__init__(self, whitelist, blacklist, key, unkey, text, topic)
+    def __init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic):
+        Event.__init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic)
 
     def get_topic(self):
         return self.type

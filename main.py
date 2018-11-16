@@ -348,6 +348,8 @@ class Scenario:
                                         dialogueJSON["blacklist"] if "blacklist" in dialogueJSON else "",
                                         dialogueJSON["key"] if "key" in dialogueJSON else "",
                                         dialogueJSON["unkey"] if "unkey" in dialogueJSON else "",
+                                        dialogueJSON["keyRoom"] if "keyRoom" in dialogueJSON else [""],
+                                        dialogueJSON["unkeyRoom"] if "unkeyRoom" in dialogueJSON else [""],
                                         dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
                                         dialogueJSON["topic"] if "topic" in dialogueJSON else "")
 
@@ -418,8 +420,10 @@ class Scenario:
         new_event = Event(
             event_json["whitelist"] if "whitelist" in event_json else "",
             event_json["blacklist"] if "blacklist" in event_json else "",
-            event_json["key"] if "key" in event_json else "",
-            event_json["unkey"] if "unkey" in event_json else "",
+            event_json["key"] if "key" in event_json else [""],
+            event_json["unkey"] if "unkey" in event_json else [""],
+            event_json["keyRoom"] if "keyRoom" in event_json else [""],
+            event_json["unkeyRoom"] if "unkeyRoom" in event_json else [""],
             event_json["text"] if "text" in event_json else "",
             event_json["type"] if "type" in event_json else ""
         )
@@ -762,6 +766,7 @@ def act(command, player: Player, display: Display):
     elif verb == "map":
         display.map()
     else:
+        event_listener(verb, player, display)
         display.confirm_command("I do not understand that command", False)
 
     # basic interaction types
@@ -786,7 +791,6 @@ def event_listener(event_type, player, display: Display, entity: Entity = None):
             else:
                 # print("no event activated :(")
                 pass
-
 
 def win_condition(player):
     # what is the win condition
@@ -815,6 +819,7 @@ def pre_act(player):
 #   description
 def post_act(command, player: Player, display: Display):
     player.update_keyring()
+    player.get_location().update_keyring()
 
     if command is None:
         command = ["", ""]
@@ -906,7 +911,7 @@ def main():
             "inv"
         ]
     ]
-    test_case_num = 1
+    test_case_num = 4
     testing = True
     while True:
         scene = dm.get_scenario()

@@ -240,6 +240,12 @@
             }
           ]
         }
+      ],
+      "events": [
+        {
+          "text": "you hide behind a tree. nothing happens.",
+          "type": "hide"
+        }
       ]
     },
     {
