@@ -912,7 +912,7 @@ def main():
         ]
     ]
     test_case_num = 4
-    testing = True
+    testing = False
     while True:
         scene = dm.get_scenario()
         if scene is None:

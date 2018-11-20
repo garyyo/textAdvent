@@ -169,6 +169,8 @@ class Player:
         if item_index is not None:
             item = self.remove_from_inventory(item_index)
             self.location.add_item(item)
+            self.add_key(item.get_pickup_key())
+            self.remove_key(item.get_pickup_key())
         return item_index
 
     def add_to_inventory(self, thing):

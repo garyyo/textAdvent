@@ -2,7 +2,7 @@
 a text adventure that hopefully can leverage ai stuff to make it cool
 
 # how it works (or will work...)
-in a persistent town the player is given tasks. these tasks can be something as simple as slaying a dragon or as complicated as rescuing a lost cat. Easch of these quests have different ways to complete them, wiht the goal not always staying in the same place. The cat could be in a tree, or in a bush, or may need to be summoned by a rain dance that makes it rain cats (though not dogs). But how do you know which of these will be the way that the quest is comleted? The player will play, and as they play the computer will profile them and build an internal model. This player model will then be used by a system that will try to give the player the path that they will most enjoy. 
+in a persistent town the player is given tasks. these tasks can be something as simple as slaying a dragon or as Zcomplicated as rescuing a lost cat. Each of these quests have different ways to complete them, wiht the goal not always staying in the same place. The cat could be in a tree, or in a bush, or may need to be summoned by a rain dance that makes it rain cats (though not dogs). But how do you know which of these will be the way that the quest is completed? The player will play, and as they play the computer will profile them and build an internal model. This player model will then be used by a system that will try to give the player the path that they will most enjoy. 
 
 # The player model
 currently the player model is the player's affinity towards certain actions. this method is incomplete atm.

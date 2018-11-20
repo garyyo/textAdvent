@@ -245,6 +245,12 @@
         {
           "text": "you hide behind a tree. nothing happens.",
           "type": "hide"
+        },
+        {
+          "text": "you place the bait on the ground, now you just need to wait",
+          "type": "hide",
+          "blacklist": ["cat-bait"],
+          "whitelistRoom": ["cat-bait"]
         }
       ]
     },
@@ -329,6 +335,14 @@
           ]
         }
       ],
+      "items": [
+        {
+          "name": "p",
+          "pickupKey": "generic-object",
+          "pickupable": true,
+          "hidden": true
+        }
+      ],
       "backgrounds": [
         {
           "name":"Fountain",
@@ -338,7 +352,6 @@
           "smell": "",
           "taste": "",
           "pickupable": false,
-          "pickupKey": "",
           "events": [
             {
               "text": "You turned the fountain off. Quick, turn it back on before someone notices",
