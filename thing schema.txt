@@ -46,6 +46,8 @@ event:
     blacklist: player cannot have tags in this list
     key: gives a key to player
     unkey: takes a key from player if exists
+    keyRoom: gives a key to room
+    unkeyRoom: takes a key from room if exists
     show:
         name: name of thing to make visible
         class: what type of object, just to know which list to search
@@ -70,3 +72,5 @@ dialogues: very similar to event... now extends event
     blacklist: player cannot have tags in this list
     key: gives a key to player
     unkey: takes a key from player if exists
+    keyRoom: gives a key to room
+    unkeyRoom: takes a key from room if exists
