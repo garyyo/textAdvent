@@ -138,7 +138,7 @@ class Player:
     # get the index of an item in the players inventory, or None if it doesnt exist
     def get_inventory_index(self, item_name: str) -> int:
         for i in range(len(self.inventory)):
-            if self.inventory[i].name == item_name:
+            if self.inventory[i].name.lower() == item_name.lower():
                 return i
 
     def get_inventory(self):

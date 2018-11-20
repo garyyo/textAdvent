@@ -31,8 +31,8 @@ class Parser:
         "intensifier": ["fucking"]
     }
     verbs = {
-        "pickup": ["pickup", "grab", "get", "take"],
-        "place": ["drop", "place"],
+        "pickup": ["pickup", "grab", "get", "take", "pick"],
+        "place": ["drop", "place", "put"],
         "move": ["go", "move", "walk", "run"],
         "direction": ["north", "south", "east", "west", "up", "down", "left", "right",
                       "n", "s", "e", "w", "u", "d", "l", "r"],
@@ -53,6 +53,10 @@ class Parser:
 
     def split_commands(self, command_str):
         self.commandList = command_str.split(" ") + ["", "", "", ""]
+        if (self.commandList[0] == "pick" and self.commandList[1] == "up") \
+                or (self.commandList[0] == "place" and self.commandList[1] == "down") \
+                or (self.commandList[0] == "put" and self.commandList[1] == "down"):
+            self.commandList[0:2] = [''.join(self.commandList[0:2])]
 
     def parse_commands(self, command_str):
         self.split_commands(command_str)
@@ -598,7 +602,7 @@ class Display:
     def event(self, text):
         if text == "":
             return
-        self.add_print_list([text])
+        self.add_print_list([self.color_text(text,"bold")])
 
     def topics_list(self, actor):
         topics_list = actor.get_topics_list(self.player.get_keys())
@@ -715,13 +719,13 @@ def act(command, player: Player, display: Display):
     if verb == "pickup":
         attempt = player.pickup(target)
         if attempt is not None:
-            print("you have picked up", target)
+            display.event("you have picked up " + target)
         else:
             display.confirm_command("you cannot pick that up", False)
     elif verb == "place":
         attempt = player.drop(target)
         if attempt is not None:
-            print("you have dropped", target)
+            display.event("you have dropped " + target)
         else:
             display.confirm_command("you do not have that item in your pockets", False)
     elif verb == "move":
