@@ -149,6 +149,8 @@ class Player:
         # find item in room
         item_index = self.location.get_items_index(item_name)
 
+        item = None
+
         # if item is in current location, remove from room, add to inventory
         if item_index is not None:
 
@@ -161,17 +163,18 @@ class Player:
             self.add_key(item.get_pickup_key())
 
         # return item
-        return item_index
+        return item
 
     # return index of item removed, None if item not there
     def drop(self, item_name):
         item_index = self.get_inventory_index(item_name)
+        item = None
         if item_index is not None:
             item = self.remove_from_inventory(item_index)
             self.location.add_item(item)
             self.add_key(item.get_pickup_key())
             self.remove_key(item.get_pickup_key())
-        return item_index
+        return item
 
     def add_to_inventory(self, thing):
         # append item to inventory list

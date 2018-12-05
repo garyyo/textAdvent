@@ -94,7 +94,9 @@ class Event:
     def get_make_invisible(self):
         return self.makeInvisible
 
-
+# todo: dialogue give automatic keys for their topics in form of(topic-actorName-topicName)
+# maybe even have each dialogue have a new sectio for topic chains. you just put in the name of the previous topic and
+# it auto gets added to the list of whitelisted keys
 class Dialogue(Event):
     def __init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic):
         Event.__init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic)
