@@ -138,3 +138,4 @@ in comes our system
 given a story that the player can play through we give the player a number of paths that they can choose
 from each path there are links to other t
 
+information gain. if the player took each path which path gives the most amount of info
