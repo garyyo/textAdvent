@@ -32,7 +32,7 @@ class Parser:
     }
     verbs = {
         "pickup": ["pickup", "grab", "get", "take", "pick"],
-        "place": ["drop", "place", "put"],
+        "drop": ["drop", "place", "put"],
         "move": ["go", "move", "walk", "run"],
         "direction": ["north", "south", "east", "west", "up", "down", "left", "right",
                       "n", "s", "e", "w", "u", "d", "l", "r"],
@@ -54,7 +54,7 @@ class Parser:
     def split_commands(self, command_str):
         self.commandList = command_str.split(" ") + ["", "", "", ""]
         if (self.commandList[0] == "pick" and self.commandList[1] == "up") \
-                or (self.commandList[0] == "place" and self.commandList[1] == "down") \
+                or (self.commandList[0] == "drop" and self.commandList[1] == "down") \
                 or (self.commandList[0] == "put" and self.commandList[1] == "down"):
             self.commandList[0:2] = [''.join(self.commandList[0:2])]
 
@@ -230,7 +230,7 @@ class ScenarioBuilder:
         self.scenarioList = []
         # self.playerModel = [0.51087279, 0.22050487, 0.4063116, 0.713533420, 0.08517401]
         self.playerModel = [0, 0, 0, 0, 0]
-        self.build_scenarios(["cat.json", "example.json"])
+        self.build_scenarios(["boring.json"])
         pass
 
     def build_scenarios(self, file_list):
@@ -717,15 +717,19 @@ def act(command, player: Player, display: Display):
     target = command[1]
 
     if verb == "pickup":
+        target = " ".join(command[1:]).strip()
         attempt = player.pickup(target)
         if attempt is not None:
             display.event("you have picked up " + target)
+            event_listener("onPickup", player, display, entity=attempt)
         else:
             display.confirm_command("you cannot pick that up", False)
-    elif verb == "place":
+    elif verb == "drop":
+        target = " ".join(command[1:]).strip()
         attempt = player.drop(target)
         if attempt is not None:
             display.event("you have dropped " + target)
+            event_listener("onDrop", player, display, entity=attempt)
         else:
             display.confirm_command("you do not have that item in your pockets", False)
     elif verb == "move":
@@ -749,6 +753,7 @@ def act(command, player: Player, display: Display):
         display.inventory()
         pass
     elif verb == "look":
+        target = " ".join(command[1:]).strip()
         entity = player.get_location().get_item(target)
         if entity is None:
             entity = player.get_location().get_actor_visible(target)
@@ -757,6 +762,7 @@ def act(command, player: Player, display: Display):
             event_listener("onExamine", player, display, entity)
 
     elif verb == "use":
+        target = " ".join(command[1:]).strip()
         entity = player.get_location().get_item(target)
         if entity is not None:
             event_listener("onUse", player, display, entity)
@@ -768,7 +774,8 @@ def act(command, player: Player, display: Display):
     elif verb == "key":
         display.keys()
     elif verb == "map":
-        display.map()
+        # display.map()
+        pass
     else:
         event_listener(verb, player, display)
         display.confirm_command("I do not understand that command", False)
@@ -955,6 +962,8 @@ def main():
             # interpret input
 
             act(command_array, player, display)
+
+            player.update_keyring()
             event_listener("active", player, display)
 
             post_act(command_array, player, display)
