@@ -139,3 +139,25 @@ given a story that the player can play through we give the player a number of pa
 from each path there are links to other t
 
 information gain. if the player took each path which path gives the most amount of info
+
+player model is some distribution over some alternatives. probabiltiys of taking branching paths.
+
+player model has some kind of survey, by putting them in various situations, . by tags.
+
+go back and show them the difference between the learned and the initial player model. call back to earlier actions to show why the player has the model they do.
+
+
+
+everything to put into the abstract.
+motivations of the problem
+what we do to solve the problem
+if we have them the results
+
+two to three paragraphs, hopefully only two.
+descriptive but not distracting.
+
+think of a good title.
+
+information based online drama management
+
+all of this can change from now till the actual submission.
