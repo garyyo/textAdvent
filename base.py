@@ -122,8 +122,9 @@ class Player:
     added_keys: List[str]
     removed_keys: List[str]
     gold: int
+    map: str
 
-    def __init__(self, start_location: Room, starting_keys):
+    def __init__(self, start_location: Room, starting_keys, map_chart="you have no map"):
         self.location = start_location
         self.inventory = []
         self.conditions = []
@@ -131,6 +132,7 @@ class Player:
         self.added_keys = []
         self.removed_keys = []
         self.gold = 0
+        self.map = map_chart
 
     def get_location(self):
         return self.location

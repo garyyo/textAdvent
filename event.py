@@ -13,7 +13,7 @@ class Event:
     makeVisible: []
     makeInvisible: []
 
-    def __init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, event_text, event_type):
+    def __init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, event_text, event_type, source=None):
         self.whitelistKeys = whitelist
         self.blacklistKeys = blacklist
         self.giveKeys = key
@@ -24,6 +24,7 @@ class Event:
         self.type = event_type
         self.makeVisible = []
         self.makeInvisible = []
+        self.source = source
 
     def activate(self, player):
         location: Room = player.get_location()
@@ -94,12 +95,13 @@ class Event:
     def get_make_invisible(self):
         return self.makeInvisible
 
+
 # todo: dialogue give automatic keys for their topics in form of(topic-actorName-topicName)
 # maybe even have each dialogue have a new sectio for topic chains. you just put in the name of the previous topic and
 # it auto gets added to the list of whitelisted keys
 class Dialogue(Event):
     def __init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic):
-        Event.__init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic)
+        Event.__init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic, source="dialogue")
 
     def get_topic(self):
         return self.type

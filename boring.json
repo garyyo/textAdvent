@@ -607,7 +607,52 @@
           "taste": "",
           "pickupable": true,
           "hidden": true,
-          "pickupKey": "golden-key"
+          "events": [
+            {
+              "text": "",
+              "type": "onPickup",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                "golden-key"
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onDrop",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                "golden-key"
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            }
+          ]
         }
       ],
       "backgrounds": [
@@ -769,7 +814,6 @@
           "taste": "",
           "pickupable": true,
           "hidden": true,
-          "pickupKey": "gold-key",
           "events": [
             {
               "text": "",
@@ -825,7 +869,7 @@
                 ""
               ],
               "key": [
-                ""
+                "golden-key"
               ],
               "unkey": [
                 ""
@@ -850,7 +894,7 @@
                 ""
               ],
               "unkey": [
-                ""
+                "golden-key"
               ],
               "show": [
                 {
@@ -1834,7 +1878,6 @@
           "smell": "",
           "taste": "",
           "pickupable": true,
-          "pickupKey": "golden-key",
           "events": [
             {
               "text": "",
@@ -1890,7 +1933,7 @@
                 ""
               ],
               "key": [
-                ""
+                "golden-key"
               ],
               "unkey": [
                 ""
@@ -1915,7 +1958,7 @@
                 ""
               ],
               "unkey": [
-                ""
+                "golden-key"
               ],
               "show": [
                 {
@@ -2068,5 +2111,6 @@
   "startingKeys":[
     "alive", "v"
   ],
-  "initialGold": 10
+  "initialGold": 10,
+  "map": "1   2 - 3 \n|   |   |\n4 - 5   6\n|   |   |\n7   8 - 9"
 }
