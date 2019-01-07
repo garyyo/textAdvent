@@ -225,14 +225,17 @@ class Parser:
 
 class ScenarioBuilder:
     scenarioList: List[Scenario]
-    playerModel: List[float]
+    playerModel: Dict[str, float]
     currentScene: Scenario
     state: str
+    action_list: List[str]
+    action_choices = ["pickup", "look", "talk", "use"]
 
     def __init__(self):
         self.scenarioList = []
-        # self.playerModel = [0.51087279, 0.22050487, 0.4063116, 0.713533420, 0.08517401]
-        self.playerModel = [0, 0, 0, 0, 0]
+        self.playerModel = {}
+        self.action_list = []
+        self.reset_model()
         self.build_scenarios(["boring.json"])
         self.state = "wait"
         pass
@@ -248,7 +251,8 @@ class ScenarioBuilder:
     def choose_scenario(self):
         if len(self.scenarioList) == 0:
             return None
-        scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel)))
+        # scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel)))
+        scene = self.scenarioList[0]
         # todo: re-enable when we have more scenes
         # self.scenarioList.remove(scene)
         return scene
@@ -269,7 +273,7 @@ class ScenarioBuilder:
 
     def update(self):
         # check boredom
-        bored = False
+        bored = self.boredom_detector()
         # if bored change state to explore or exploit
         if bored:
             epsilon = .7
@@ -278,64 +282,100 @@ class ScenarioBuilder:
                 self.state = "explore"
             else:
                 self.state = "exploit"
-        # based on the state, assign the player some amount of keys to help with them actually getting that choice.
+        # based on the state, assign the player some amount
+        # of keys to help with them actually getting that choice.
+        pprint(self.playerModel)
+
+    def boredom_detector(self):
+        v = {'look': 0.3333333333333333,
+             'pickup': 0.3333333333333333,
+             'talk': 0.26666666666666666,
+             'use': 0.06666666666666667}
+        t = {'look': 0.0,
+             'pickup': 0.23529411764705882,
+             'talk': 0.7058823529411765,
+             'use': 0.058823529411764705}
+        l = {'look': 0.3125, 'pickup': 0.3125, 'talk': 0.0, 'use': 0.375}
 
     def trace_quest(self):
-        # start from the back and work your way forward
+        def ei(event_list):
+            return_string = ""
+            if event_list is None:
+                return ""
+            for event in event_list:
+                return_string += ",".join(event.whitelistKeys)
+                return_string += " | "
+                return_string += event.source_type
+                return_string += "->"
+                return_string += event.type
+                return_string += "->"
+                return_string += event.source_ID if event.source_ID is not None else ""
+                return_string += " | "
+                return_string += ",".join(event.giveKeys)
+                return_string += "\n\t"
+                return_string += event.text
+                return_string += "\n"
 
-        # start key = win
+            return return_string
 
-        # find key
-
-        # get key whitelist, repeat. this should maybe have a recursive component
-
-        def trace_recursive(whitelist, blacklist):
-
-            pass
-
-        def find_prereq:
-            # what is a prereq?
-            # if the key giver is a normal event, its whitelist
-            # if the key giver is a pickup event, its item
-            # if its an item, either the room that its in
-            #                 or the event that shows it, or both
-            # if its a room, the event that opens the link to any connected rooms
-            # if event that shows it, whitelist.
-
-            # how to codify these things into a common type?
-            # just trace back to the underlying event that makes this key accessible and use that for tracing purposes.
-            # but what about things with multiple event prereqs?, split the path, and check if it reconnects?
-
-
-            pass
+        def find_item_show(item: Item):
+            event_list = []
+            for event in self.currentScene.eventList:
+                for visible in event.makeVisible:
+                    if item.name in visible[0] and event.room == item.start_room:
+                        event_list.append(event)
+            return event_list
 
         def find_keys(key):
             # return key, unkey
             return_list = []
             for event in self.currentScene.eventList:
-                print(event.type, event.giveKeys)
                 if key in event.giveKeys:
                     return_list.append(event)
             return return_list
-            pass
-        prereq_list = find_keys("win")
-        for prereq in prereq_list:
-            for whitelist_key in prereq.whitelistKeys:
-                for i in find_keys(whitelist_key):
-                    print(i.whitelistKeys)
+
+        def pre_step(req_list):
+            return_list = []
+            for prereq in req_list:
+                if prereq.type == "onPickup":
+                    new_list = find_item_show(prereq.source)
+                    print(ei(new_list))
+                    return_list += new_list
+                else:
+                    for key in prereq.whitelistKeys:
+                        new_list = find_keys(key)
+                        print(ei(new_list))
+                        return_list += new_list
+            return return_list
+
+        print("step================================================================")
+        prereq_list: List[Event] = find_keys("win")
+        print(ei(prereq_list))
+        print("step================================================================")
+        prereq_list = pre_step(prereq_list)
+        print("step================================================================")
+        prereq_list = pre_step(prereq_list)
+        print("step================================================================")
+        prereq_list = pre_step(prereq_list)
+
         pass
 
     def update_model(self, command_array):
-        action = command_array[0]
-        if action == "look" or action == "use":
-            self.playerModel[0] = (self.playerModel[0] * 2 + 1) / 3
-            self.playerModel[1] = (self.playerModel[1] * 2 + 1) / 3
-            self.playerModel[2] = (self.playerModel[2] * 2 + 1) / 3
-            self.playerModel[3] = (self.playerModel[3] * 2 + 1) / 3
-            self.playerModel[4] = (self.playerModel[4] * 2 + 1) / 3
+        # add action to tracked list if its one of the tracked actions,
+        # and trim the list to the last x actions (50 right now)
+        if command_array[0] in self.action_choices:
+            self.action_list.append(command_array[0])
+            if len(self.action_list) > 5:
+                self.action_list = self.action_list[-50:]
+
+        # update the playermodel
+        if len(self.action_list) > 0:
+            for action in self.action_choices:
+                self.playerModel[action] = self.action_list.count(action)/len(self.action_list)
 
     def reset_model(self):
-        self.playerModel = [0, 0, 0, 0, 0]
+        for action in self.action_choices:
+            self.playerModel[action] = 0
 
     def print_model(self):
         print(self.playerModel)
@@ -376,16 +416,16 @@ class Scenario:
 
             if "items" in room_json:
                 for itemJSON in room_json["items"]:
-                    new_room.add_item(self.item_create(itemJSON))
+                    new_room.add_item(self.item_create(itemJSON, new_room))
             if "backgrounds" in room_json:
                 for itemJSON in room_json["backgrounds"]:
-                    new_room.add_item(self.item_create(itemJSON))
+                    new_room.add_item(self.item_create(itemJSON, new_room))
             if "actors" in room_json:
                 for actorJSON in room_json["actors"]:
-                    new_room.add_actor(self.actor_create(actorJSON))
+                    new_room.add_actor(self.actor_create(actorJSON, new_room))
             if "events" in room_json:
                 for eventJSON in room_json["events"]:
-                    new_room.add_event(self.event_create(eventJSON, source="room"))
+                    new_room.add_event(self.event_create(eventJSON, new_room, source_type="room", source=new_room))
 
             self.roomList[name] = new_room
 
@@ -398,11 +438,12 @@ class Scenario:
                                           linkJSON["direction"] if "direction" in linkJSON else "up",
                                           linkJSON["hidden"] if "hidden" in linkJSON else False)
 
-    def actor_create(self, actor_json):
+    def actor_create(self, actor_json, new_room):
         new_actor = Actor(
             actor_json["name"] if "name" in actor_json else "",
             actor_json["examine"] if "examine" in actor_json else "",
-            actor_json["desc"] if "desc" in actor_json else ""
+            actor_json["desc"] if "desc" in actor_json else "",
+            new_room
         )
         if new_actor.get_name() in ["template", ""]:
             return None
@@ -419,7 +460,8 @@ class Scenario:
                                         dialogueJSON["keyRoom"] if "keyRoom" in dialogueJSON else [""],
                                         dialogueJSON["unkeyRoom"] if "unkeyRoom" in dialogueJSON else [""],
                                         dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
-                                        dialogueJSON["topic"] if "topic" in dialogueJSON else "")
+                                        dialogueJSON["topic"] if "topic" in dialogueJSON else "",
+                                        new_room)
 
                 # get rid of empty entries.
                 for i in range(len(new_dialogue.whitelistKeys)):
@@ -434,7 +476,7 @@ class Scenario:
         self.actorList.append(new_actor)
         return new_actor
 
-    def item_create(self, item_json):
+    def item_create(self, item_json, start_room):
         new_item = Item(
             item_json["name"] if "name" in item_json else "",
             item_json["examine"] if "examine" in item_json else "",
@@ -445,7 +487,8 @@ class Scenario:
             item_json["taste"] if "taste" in item_json else "",
             item_json["size"] if "size" in item_json else "",
             item_json["pickupable"] if "pickupable" in item_json else False,
-            item_json["pickupKey"] if "pickupKey" in item_json else ""
+            item_json["pickupKey"] if "pickupKey" in item_json else "",
+            start_room
         )
 
         # get rid of templates
@@ -454,7 +497,7 @@ class Scenario:
 
         if "events" in item_json:
             for eventJSON in item_json["events"]:
-                new_item.add_event(self.event_create(eventJSON, source="item"))
+                new_item.add_event(self.event_create(eventJSON, start_room, source_type="item", source=new_item))
 
         if "hidden" in item_json:
             new_item.hide()
@@ -484,7 +527,7 @@ class Scenario:
         self.itemList.append(new_item)
         return new_item
 
-    def event_create(self, event_json, source=None):
+    def event_create(self, event_json, room, source_type=None, source=None):
         new_event = Event(
             event_json["whitelist"] if "whitelist" in event_json else "",
             event_json["blacklist"] if "blacklist" in event_json else "",
@@ -494,6 +537,8 @@ class Scenario:
             event_json["unkeyRoom"] if "unkeyRoom" in event_json else [""],
             event_json["text"] if "text" in event_json else "",
             event_json["type"] if "type" in event_json else "",
+            room,
+            source_type=source_type,
             source=source
         )
 
@@ -915,64 +960,72 @@ def main():
 
     dm = ScenarioBuilder()
 
-    # test_cases = [
-    #     [
-    #         "e",
-    #         "t b c",
-    #         "w",
-    #         "n",
-    #         "t g o",
-    #         "s",
-    #         "w",
-    #         "w",
-    #         "go t",
-    #         "k",
-    #         "t b"
-    #     ],
-    #     [
-    #         "e",
-    #         "t b c",
-    #         "w",
-    #         "touch f",
-    #         "touch f",
-    #         "w",
-    #         "s",
-    #         "grab cat"
-    #     ],
-    #     [
-    #
-    #         "e",
-    #         "t b c",
-    #         "w",
-    #         "n",
-    #         "t g o",
-    #         "n",
-    #         "look at the bush",
-    #         "pickup b",
-    #         "inv"
-    #     ],
-    #     [
-    #         "e",
-    #         "t b c",
-    #         "w",
-    #         "w",
-    #         "t b c",
-    #         "e",
-    #         "s",
-    #         "examine c",
-    #         "t c c"
-    #     ],
-    #     [
-    #         "n",
-    #         "n",
-    #         "grab s",
-    #         "inv"
-    #     ]
-    # ]
-    # test_case_num = 4
-    test_cases = []
+    test_cases = [
+        ['n',
+         'e',
+         'look at book',
+         'g b',
+         'grab book',
+         's',
+         'examine holocube',
+         'examine pedestal',
+         'use pede',
+         'pickup holocube',
+         'use pedestal',
+         's',
+         'look at projector',
+         'use pro',
+         'e',
+         'w',
+         'examine b',
+         'use bookshelf',
+         'grab keymold',
+         'e',
+         'use projector',
+         'pickup golden key',
+         'grab g',
+         'w',
+         'n'],
+        [
+            "w",
+            "t b",
+            "t b h",
+            "t b f",
+            "e",
+            "n",
+            "t w",
+            "t w g",
+            "e",
+            "s",
+            "grab tab",
+            "s",
+            "w",
+            "pickup b",
+            "n",
+            "n",
+            "t w",
+            "t w t",
+            "drop book",
+            "drop tablet",
+            "talk w",
+            "t w d",
+            "grab g",
+            "s",
+            "w",
+            "t b",
+            "t b favor done",
+            "drop gold",
+            "t b k",
+            "grab g",
+            "e",
+            "use g"
+        ]
+    ]
     test_case_num = 0
-    testing = False
+    command_history = []
+    # test_cases = []
+    # test_case_num = 0
+    testing = True
     while True:
         scene = dm.get_scenario()
         if scene is None:
@@ -982,9 +1035,8 @@ def main():
         parser = Parser(player)
         display = Display(player)
 
-        dm.trace_quest()
-        return 0
-
+        # todo: finish trace test
+        # trace_test(dm)
         # have the player enter the room officially.
         event_listener("onEnter", player, display)
         post_act(None, player, display)
@@ -1000,9 +1052,14 @@ def main():
                 print(">", command)
             else:
                 command = input("> ")
+            if command == "record":
+                pprint(command_history)
+                continue
+            command_history.append(command)
             command_array = parser.parse_commands(command)
 
             dm.update_model(command_array)
+            dm.update()
             if dm.player_status():
                 add, remove = dm.keys_from_model()
                 for key in add:
@@ -1023,6 +1080,11 @@ def main():
         # give the player some blank space to look at
         input("Press enter to continue...")
         print("\n\n\n\n\n\n\n\n")
+
+
+def trace_test(dm):
+    dm.trace_quest()
+    exit(0)
 
 
 main()

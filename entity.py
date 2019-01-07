@@ -11,12 +11,13 @@ class Entity:
     events: List[Event]
     inventory: List[Item]
 
-    def __init__(self, name, examine_desc, desc):
+    def __init__(self, name, examine_desc, desc, start_room):
         self.name = name
         self.description = desc
         self.examine_desc = examine_desc
         self.visible = True
         self.events = []
+        self.start_room = start_room
 
     def get_desc(self):
         if not self.visible:
@@ -72,8 +73,9 @@ class Item(Entity):
     pickupable: bool
     pickupKey: str
 
-    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size, pickupable, pickup_key):
-        Entity.__init__(self, name, examine_desc, desc)
+    def __init__(self, name, examine_desc, inv_desc, desc, weight,
+                 smell, taste, size, pickupable, pickup_key, start_room):
+        Entity.__init__(self, name, examine_desc, desc, start_room)
         self.inventory_desc = inv_desc
         self.weight = weight
         self.smell = smell
@@ -105,21 +107,25 @@ class Item(Entity):
 
 
 class Background(Item):
-    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size):
-        Item.__init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size, False, "")
+    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size, start_room):
+        Item.__init__(self, name, examine_desc, inv_desc, desc,
+                      weight, smell, taste, size, False, "", start_room)
 
 
 class Container(Background):
 
-    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size):
-        Background.__init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size)
+    def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size, start_room):
+        Background.__init__(self, name, examine_desc, inv_desc, desc,
+                            weight, smell, taste, size, start_room)
 
 
 class Actor(Entity):
+    # todo: add "doesnt want to talk" text option,
+    # todo: so that actors have custom "doesnt want to talk to you text
     dialogueList: Dict[str, Dialogue]
 
-    def __init__(self, name, examine_desc, desc, ):
-        Entity.__init__(self, name, examine_desc, desc)
+    def __init__(self, name, examine_desc, desc, start_room):
+        Entity.__init__(self, name, examine_desc, desc, start_room)
         self.dialogueList = {}
 
     def add_dialogue(self, chat: Dialogue):

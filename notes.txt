@@ -138,3 +138,10 @@ in comes our system
 given a story that the player can play through we give the player a number of paths that they can choose
 from each path there are links to other t
 
+todo: test our system
+to test we need it to prefer some line
+
+todo: how to trace the quest for usable info
+take goal key ("win" in our case) and find what it requires
+    it requires a set of keys
+        for those set of keys find out what events give them.

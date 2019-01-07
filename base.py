@@ -86,7 +86,8 @@ class Room:
             self.keyring.append(key)
         self.added_keys = []
         for key in self.removed_keys:
-            self.keyring.remove(key)
+            if key in self.keyring:
+                self.keyring.remove(key)
         self.removed_keys = []
 
     def add_key(self, key):
@@ -200,7 +201,8 @@ class Player:
             self.keyring.append(key)
         self.added_keys = []
         for key in self.removed_keys:
-            self.keyring.remove(key)
+            if key in self.keyring:
+                self.keyring.remove(key)
         self.removed_keys = []
 
     def add_key(self, key):
