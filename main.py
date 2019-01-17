@@ -43,7 +43,8 @@ class Parser:
         "talk": ["talk", "speak", "t"],
         "inventory": ["inv", "inventory"],
         "key": ["key", "k"],
-        "map": ["map"]
+        "map": ["map"],
+        "give": ["give"]
     }
     player: Player
 
@@ -361,6 +362,12 @@ class ScenarioBuilder:
         pass
 
     def update_model(self, command_array):
+        # todo: this needs to be updated to take into account some earlier idea as to what the player prefers
+        # todo: currently every action of the player can make a huge change as to what their model is.
+        # todo: have a previous model that the DM tracks, the current model, and the difference between the two
+        # todo: is the uncertainty. when the DM gives (and the player takes) an explore choice, the previous
+        # todo: model can be updated.
+
         # add action to tracked list if its one of the tracked actions,
         # and trim the list to the last x actions (50 right now)
         if command_array[0] in self.action_choices:

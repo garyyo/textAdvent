@@ -145,3 +145,5 @@ todo: how to trace the quest for usable info
 take goal key ("win" in our case) and find what it requires
     it requires a set of keys
         for those set of keys find out what events give them.
+
+todo for branch points there should be some sort of threshold. so if a player is only a little bit bored they wont be offered something that will skip them to the end.

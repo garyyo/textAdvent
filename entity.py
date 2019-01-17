@@ -159,3 +159,4 @@ class Actor(Entity):
     def give_dialogue_keys(self, topic):
         if topic in self.dialogueList:
             return self.dialogueList[topic].get_keys()
+# todo: create enemies that the player can fight, and associated events. enemies just have some required tags to do a "fight" action on. extend them off of actors so they can have inventories (that they drop into the world on death?) and maybe you can just talk to them? maybe a hostile tag to see if you can talk to them? who knows.
