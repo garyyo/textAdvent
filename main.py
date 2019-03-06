@@ -704,6 +704,53 @@ class Display:
         return print_text, line
 
 
+class Act:
+    def __init__(self):
+
+        pass
+
+    # pick up from room
+    # or container if specified
+    def grab(self):
+        pass
+
+    # give to npc
+    def give(self):
+        pass
+
+    # place in room
+    def drop(self):
+        pass
+
+    # move to another room
+    def move(self):
+        pass
+
+    # talk to npc
+    def talk(self):
+        pass
+
+    # print the inventory
+    def inventory(self):
+        pass
+
+    # activate the use event on object in (inventory or) room
+    def use(self):
+        pass
+
+    # activate examine event on object in room
+    def examine(self):
+        pass
+
+    # print map
+    def map(self):
+        pass
+
+    # print keys, for debugging
+    def key(self):
+        pass
+
+
 # todo: objectify act. turn each command into an object with functions for pre during and post.
 # then we can just call:
 # act.pre(commandList)
@@ -819,15 +866,6 @@ def pre_act(player):
     return player
 
 
-# todo fix babushka not giving correct options the first time she answers a topic.
-# talk b c
-# prints
-# Babushka can talk about:
-# 	cat
-# instead of
-# Babushka can talk about:
-# 	cat
-#   description
 def post_act(command, player: Player, display: Display):
     player.update_keyring()
     player.get_location().update_keyring()
@@ -845,14 +883,14 @@ def post_act(command, player: Player, display: Display):
     pass
 
 
-def intro_q():
-    answers = []
-    print("answer with y or n")
-    answers.append(True if input("do you like swords") == "y" else False)
-    answers.append(True if input("do you like talking") == "y" else False)
-    answers.append(True if input("do you want mystery") == "y" else False)
-    answers.append(True if input("do you want action") == "y" else False)
-    return answers
+# def intro_q():
+#     answers = []
+#     print("answer with y or n")
+#     answers.append(True if input("do you like swords") == "y" else False)
+#     answers.append(True if input("do you like talking") == "y" else False)
+#     answers.append(True if input("do you want mystery") == "y" else False)
+#     answers.append(True if input("do you want action") == "y" else False)
+#     return answers
 
 
 def main():
