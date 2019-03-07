@@ -1153,7 +1153,7 @@
       "backgrounds": [
         {
           "name":"Golden Door",
-          "examine": "A golden door for a golden key",
+          "examine": "A golden door with a golden lock for a golden key",
           "invDesc": "",
           "desc": "a way out",
           "weight": 0,
@@ -2314,7 +2314,7 @@
 
     ],
   "startingKeys":[
-    "alive", "l", "bored"
+    "alive", "l"
   ],
   "initialGold": 10,
   "map": "1   2 - 3 \n|   |   |\n4 - 5   6\n|   |   |\n7   8 - 9"

@@ -266,6 +266,10 @@ class ScenarioBuilder:
     def player_status(self):
         # when the player model gets too far away from the current, offer a new quest
         best_scene = self.choose_scenario()
+
+        pprint(self.playerModel)
+        pprint(self.currentScene.get_weights())
+        pprint(best_scene.get_weights())
         if best_scene == self.currentScene:
             # print("~~~everything is fine~~~")
             return False
@@ -285,7 +289,6 @@ class ScenarioBuilder:
                 self.state = "exploit"
         # based on the state, assign the player some amount
         # of keys to help with them actually getting that choice.
-        pprint(self.playerModel)
 
     def boredom_detector(self):
         v = {'look': 0.3333333333333333,
@@ -866,7 +869,10 @@ class Act:
         }
         pass
 
-    def interpret(self, commands):
+    def pre(self, commands):
+        pass
+
+    def mid(self, commands):
         verb = commands[0]
         self.command = commands
         if verb in self.action_functions:
@@ -874,6 +880,23 @@ class Act:
         else:
             event_listener(verb, self.player, self.display)
             self.display.confirm_command("I do not understand that command", False)
+        pass
+
+    def post(self, commands):
+
+        self.player.update_keyring()
+        self.player.get_location().update_keyring()
+
+        if commands is None:
+            commands = ["", ""]
+        verb = commands[0]
+        target = commands[1]
+        if verb == "talk":
+            actor = self.player.get_location().get_actor_visible(target)
+            if actor is not None:
+                self.display.topics_list(actor)
+        self.display.display_room()
+        self.display.print()
         pass
 
     # pick up from room
@@ -1009,28 +1032,6 @@ def win_condition(player):
     return False
 
 
-def pre_act(player):
-    pass
-    return player
-
-
-def post_act(command, player: Player, display: Display):
-    player.update_keyring()
-    player.get_location().update_keyring()
-
-    if command is None:
-        command = ["", ""]
-    verb = command[0]
-    target = command[1]
-    if verb == "talk":
-        actor = player.get_location().get_actor_visible(target)
-        if actor is not None:
-            display.topics_list(actor)
-    display.display_room()
-    display.print()
-    pass
-
-
 # def intro_q():
 #     answers = []
 #     print("answer with y or n")
@@ -1134,12 +1135,19 @@ def main():
         # trace_test(dm)
         # have the player enter the room officially.
         event_listener("onEnter", player, display)
-        post_act(None, player, display)
+        act.post(None)
 
         while not win_condition(player):
             # TODO: implement pre/in/post act functions
 
             # current state of pre act function
+
+            if "bored" in player.keyring:
+                # print("gotcha")
+                pprint(player.keyring)
+                show_all_distractions(player)
+            else:
+                show_all_distractions(player, False)
 
             # input
             if testing and len(test_cases[test_case_num]) > 0:
@@ -1158,24 +1166,21 @@ def main():
             if dm.player_status():
                 add, remove = dm.keys_from_model()
                 for key in add:
+                    # print(key)
                     player.add_key(key)
                 for key in remove:
                     player.remove_key(key)
-            if "bored" in player.keyring:
-                print("gotcha")
-                show_all_distractions(player)
-            else:
-                show_all_distractions(player, False)
+
             # dm.print_model()
 
             # interpret input
 
-            act.interpret(command_array)
+            act.mid(command_array)
 
             player.update_keyring()
             event_listener("active", player, display)
 
-            post_act(command_array, player, display)
+            act.post(command_array)
 
         # give the player some blank space to look at
         input("Press enter to continue...")
