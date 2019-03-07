@@ -152,7 +152,7 @@ class Parser:
         correct_list = {}
         for entity in entity_list:
             if not entity.get_visible():
-                continue;
+                continue
             entity_name = entity.get_name()
             character_length = min(len(entity_name), len(word))
             counter = 0
@@ -237,7 +237,7 @@ class ScenarioBuilder:
         self.playerModel = {}
         self.action_list = []
         self.reset_model()
-        self.build_scenarios(["boring.json"])
+        self.build_scenarios(["boring.json", "cat.json"])
         self.state = "wait"
         pass
 
@@ -252,8 +252,8 @@ class ScenarioBuilder:
     def choose_scenario(self):
         if len(self.scenarioList) == 0:
             return None
-        # scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel)))
-        scene = self.scenarioList[0]
+        scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel.values())))
+        # scene = self.scenarioList[0]
         # todo: re-enable when we have more scenes
         # self.scenarioList.remove(scene)
         return scene
@@ -434,6 +434,10 @@ class Scenario:
                 for eventJSON in room_json["events"]:
                     new_room.add_event(self.event_create(eventJSON, new_room, source_type="room", source=new_room))
 
+            # distractions need to be made for every type of thing that a player can get distracted by
+            for distract_type in ["look", "talk", "use", ]:
+                new_room.add_item(self.distraction_generation(new_room, distract_type))
+
             self.roomList[name] = new_room
 
     def link_builder(self):
@@ -460,15 +464,17 @@ class Scenario:
 
         if "dialogues" in actor_json:
             for dialogueJSON in actor_json["dialogues"]:
-                new_dialogue = Dialogue(dialogueJSON["whitelist"] if "whitelist" in dialogueJSON else "",
-                                        dialogueJSON["blacklist"] if "blacklist" in dialogueJSON else "",
-                                        dialogueJSON["key"] if "key" in dialogueJSON else "",
-                                        dialogueJSON["unkey"] if "unkey" in dialogueJSON else "",
-                                        dialogueJSON["keyRoom"] if "keyRoom" in dialogueJSON else [""],
-                                        dialogueJSON["unkeyRoom"] if "unkeyRoom" in dialogueJSON else [""],
-                                        dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
-                                        dialogueJSON["topic"] if "topic" in dialogueJSON else "",
-                                        new_room)
+                new_dialogue = Dialogue(
+                    dialogueJSON["whitelist"] if "whitelist" in dialogueJSON else "",
+                    dialogueJSON["blacklist"] if "blacklist" in dialogueJSON else "",
+                    dialogueJSON["key"] if "key" in dialogueJSON else "",
+                    dialogueJSON["unkey"] if "unkey" in dialogueJSON else "",
+                    dialogueJSON["keyRoom"] if "keyRoom" in dialogueJSON else [""],
+                    dialogueJSON["unkeyRoom"] if "unkeyRoom" in dialogueJSON else [""],
+                    dialogueJSON["text"] if "text" in dialogueJSON else "they stay silent",
+                    dialogueJSON["topic"] if "topic" in dialogueJSON else "",
+                    new_room
+                )
 
                 # get rid of empty entries.
                 for i in range(len(new_dialogue.whitelistKeys)):
@@ -512,7 +518,7 @@ class Scenario:
         self.itemList.append(new_item)
         return new_item
 
-    def background_create(self, item_json):
+    def background_create(self, item_json, start_room):
         new_item = Background(
             item_json["name"] if "name" in item_json else "",
             item_json["examine"] if "examine" in item_json else "",
@@ -522,6 +528,7 @@ class Scenario:
             item_json["smell"] if "smell" in item_json else "",
             item_json["taste"] if "taste" in item_json else "",
             item_json["size"] if "size" in item_json else "",
+            start_room
         )
 
         # get rid of templates
@@ -574,6 +581,26 @@ class Scenario:
 
         self.eventList.append(new_event)
         return new_event
+
+    def distraction_generation(self, room, distract_type):
+        # get a list of distractions
+        new_item = Background(
+            "distraction: type " + distract_type,
+            "aha you got distracted!",
+            "aha you got distracted!",
+            "aha you got distracted!",
+            0,
+            "aha you got distracted!",
+            "aha you got distracted!",
+            "aha you got distracted!",
+            room
+        )
+        new_item.set_distractor(True)
+        new_item.hide()
+
+        self.itemList.append(new_item)
+        return new_item
+        pass
 
     def get_weights(self):
         return self.jsonData["weights"] if "weights" in self.jsonData else [0, 0, 0, 0, 0]
@@ -760,7 +787,7 @@ class Display:
         if len(link_list) > 0:
             print_list.append(self.color_text("There are places to go:", "green"))
             for link in link_list:
-                print_list.append("\t" + self.color_text(link.get_direction(), "yellow") + ": " + link.get_room_name())
+                print_list.append("\t" + self.color_text(link.get_direction(), "yellow") + ": room " + link.get_room_name())
         else:
             print_list.append(self.color_text("There is nowhere to go", "green"))
 
@@ -811,14 +838,55 @@ class Display:
         return print_text, line
 
 
+# todo: objectify act. turn each command into an object with functions for pre during and post.
+# then we can just call:
+# act.pre(commandList)
+# act.active(commandList)
+# act.post(commandList)
+# can roll event listener in there so the main loop stays clean
+# pre would probably just throw away the commandList but might use previous command. if we even need pre...
 class Act:
-    def __init__(self):
+    action_functions: Dict
+    display: Display
 
+    def __init__(self, display, player):
+        self.display = display
+        self.player = player
+        self.command = []
+        self.action_functions = {
+            "pickup": self.grab,
+            "drop": self.drop,
+            "move": self.move,
+            "talk": self.talk,
+            "inventory": self.inventory,
+            "look": self.examine,
+            "use": self.use,
+            "key": self.key,
+            "map": self.map
+        }
+        pass
+
+    def interpret(self, commands):
+        verb = commands[0]
+        self.command = commands
+        if verb in self.action_functions:
+            self.action_functions[verb]()
+        else:
+            event_listener(verb, self.player, self.display)
+            self.display.confirm_command("I do not understand that command", False)
         pass
 
     # pick up from room
     # or container if specified
     def grab(self):
+
+        target = " ".join(self.command[1:]).strip()
+        attempt = self.player.pickup(target)
+        if attempt is not None:
+            self.display.event("you have picked up " + target)
+            event_listener("onPickup", self.player, self.display, entity=attempt)
+        else:
+            self.display.confirm_command("you cannot pick that up", False)
         pass
 
     # give to npc
@@ -827,114 +895,86 @@ class Act:
 
     # place in room
     def drop(self):
+        target = " ".join(self.command[1:]).strip()
+        attempt = self.player.drop(target)
+        if attempt is not None:
+            self.display.event("you have dropped " + target)
+            event_listener("onDrop", self.player, self.display, entity=attempt)
+        else:
+            self.display.confirm_command("you do not have that item in your pockets", False)
         pass
 
     # move to another room
     def move(self):
+        event_listener("onLeave", self.player, self.display)
+        # todo: add check separate from action
+        attempt = self.player.move(" ".join(filter(lambda x: len(x) > 0, self.command[1:])))
+        if attempt is None:
+            self.display.confirm_command("there is nothing in that direction", False)
+        else:
+            # todo: move leave to here, and add actual move in between on leave and and on enter.
+            event_listener("onEnter", self.player, self.display)
         pass
 
     # talk to npc
     def talk(self):
+        target = self.command[1]
+        topic = self.command[2]
+        actor = self.player.get_location().get_actor_visible(target)
+        if actor is not None:
+            if topic != "":
+                self.display.talk(actor, topic)
+        else:
+            self.display.talk(None, None, False)
+        pass
+
+    # look
+    def examine(self):
+        target = " ".join(self.command[1:]).strip()
+        entity = self.player.get_location().get_item(target)
+        if entity is None:
+            entity = self.player.get_location().get_actor_visible(target)
+        self.display.look(entity)
+        if entity is not None:
+            event_listener("onExamine", self.player, self.display, entity)
         pass
 
     # print the inventory
     def inventory(self):
+        self.display.inventory()
         pass
 
     # activate the use event on object in (inventory or) room
     def use(self):
-        pass
-
-    # activate examine event on object in room
-    def examine(self):
+        target = " ".join(self.command[1:]).strip()
+        entity = self.player.get_location().get_item(target)
+        if entity is not None:
+            event_listener("onUse", self.player, self.display, entity)
+            pass
+        else:
+            self.display.reject("You cannot use that.")
         pass
 
     # print map
     def map(self):
+        self.display.map()
         pass
 
     # print keys, for debugging
     def key(self):
+        self.display.keys()
         pass
 
 
-# todo: objectify act. turn each command into an object with functions for pre during and post.
-# then we can just call:
-# act.pre(commandList)
-# act.active(commandList)
-# act.post(commandList)
-# can roll event listener in there so the main loop stays clean
-# pre would probably just throw away the commandList but might use previous command. if we even need pre...
-def act(command, player: Player, display: Display):
-    # do verb on object
-    verb = command[0]
-    target = command[1]
-
-    if verb == "pickup":
-        target = " ".join(command[1:]).strip()
-        attempt = player.pickup(target)
-        if attempt is not None:
-            display.event("you have picked up " + target)
-            event_listener("onPickup", player, display, entity=attempt)
+def show_all_distractions(player, show=True):
+    items = player.get_location().get_items()
+    distraction_list = filter(lambda x: x.get_distractor(), items)
+    for item in distraction_list:
+        if show:
+            item.show()
         else:
-            display.confirm_command("you cannot pick that up", False)
-    elif verb == "drop":
-        target = " ".join(command[1:]).strip()
-        attempt = player.drop(target)
-        if attempt is not None:
-            display.event("you have dropped " + target)
-            event_listener("onDrop", player, display, entity=attempt)
-        else:
-            display.confirm_command("you do not have that item in your pockets", False)
-    elif verb == "move":
-        event_listener("onLeave", player, display)
-        # todo: add check separate from action
-        attempt = player.move(" ".join(filter(lambda x: len(x) > 0, command[1:])))
-        if attempt is None:
-            display.confirm_command("there is nothing in that direction", False)
-        else:
-            # todo: move leave to here, and add actual move in between on leave and and on enter.
-            event_listener("onEnter", player, display)
-    elif verb == "talk":
-        topic = command[2]
-        actor = player.get_location().get_actor_visible(target)
-        if actor is not None:
-            if topic != "":
-                display.talk(actor, topic)
-        else:
-            display.talk(None, None, False)
-    elif verb == "inventory":
-        display.inventory()
+            item.hide()
         pass
-    elif verb == "look":
-        target = " ".join(command[1:]).strip()
-        entity = player.get_location().get_item(target)
-        if entity is None:
-            entity = player.get_location().get_actor_visible(target)
-        display.look(entity)
-        if entity is not None:
-            event_listener("onExamine", player, display, entity)
-
-    elif verb == "use":
-        target = " ".join(command[1:]).strip()
-        entity = player.get_location().get_item(target)
-        if entity is not None:
-            event_listener("onUse", player, display, entity)
-            pass
-        else:
-            display.reject("You cannot use that.")
-    elif verb == "examine":
-        pass
-    elif verb == "key":
-        display.keys()
-    elif verb == "map":
-        display.map()
-        pass
-    else:
-        event_listener(verb, player, display)
-        display.confirm_command("I do not understand that command", False)
-
-    # basic interaction types
 
 
 # todo: change print statement to use the display object.
@@ -1079,7 +1119,7 @@ def main():
     command_history = []
     # test_cases = []
     # test_case_num = 0
-    testing = True
+    testing = False
     while True:
         scene = dm.get_scenario()
         if scene is None:
@@ -1088,6 +1128,7 @@ def main():
         player = scene.get_player()
         parser = Parser(player)
         display = Display(player)
+        act = Act(display, player)
 
         # todo: finish trace test
         # trace_test(dm)
@@ -1120,11 +1161,16 @@ def main():
                     player.add_key(key)
                 for key in remove:
                     player.remove_key(key)
+            if "bored" in player.keyring:
+                print("gotcha")
+                show_all_distractions(player)
+            else:
+                show_all_distractions(player, False)
             # dm.print_model()
 
             # interpret input
 
-            act(command_array, player, display)
+            act.interpret(command_array)
 
             player.update_keyring()
             event_listener("active", player, display)

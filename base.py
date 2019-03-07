@@ -217,8 +217,12 @@ class Player:
             return len(self.keyring)
         return None
 
+    # todo: put checking of keys inside the player class, instead of exclusively outside if
     def get_keys(self):
         return self.keyring
+
+    def has_keys(self, keys):
+        return set(self.keyring).issubset(keys)
 
     def move(self, direction):
         links = self.location.get_links()

@@ -10,6 +10,7 @@ class Entity:
     visible: bool
     events: List[Event]
     inventory: List[Item]
+    distractor: bool
 
     def __init__(self, name, examine_desc, desc, start_room):
         self.name = name
@@ -18,6 +19,7 @@ class Entity:
         self.visible = True
         self.events = []
         self.start_room = start_room
+        self.distractor = False
 
     def get_desc(self):
         if not self.visible:
@@ -62,6 +64,12 @@ class Entity:
 
     def get_inventory(self):
         return self.inventory
+
+    def set_distractor(self, is_distractor):
+        self.distractor = is_distractor
+
+    def get_distractor(self):
+        return self.distractor
 
 
 class Item(Entity):
@@ -113,7 +121,6 @@ class Background(Item):
 
 
 class Container(Background):
-
     def __init__(self, name, examine_desc, inv_desc, desc, weight, smell, taste, size, start_room):
         Background.__init__(self, name, examine_desc, inv_desc, desc,
                             weight, smell, taste, size, start_room)

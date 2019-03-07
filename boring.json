@@ -180,6 +180,18 @@
           "taste": "",
           "pickupable": false,
           "pickupKey": ""
+        },
+        {
+          "name":"Examine Distraction",
+          "examine": "you look at it, you hear some whirring in the distance, your examine stat goes up",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": "",
+          "distractor": "look"
         }
       ],
       "events": [
@@ -1008,7 +1020,7 @@
     {
       "name": "5",
       "examine": "",
-      "desc": "",
+      "desc": "You awaken at a golden door. You need to get through it to escape this place.",
       "startLocation": true,
       "actors": [
         {
@@ -1143,7 +1155,7 @@
           "name":"Golden Door",
           "examine": "A golden door for a golden key",
           "invDesc": "",
-          "desc": "",
+          "desc": "a way out",
           "weight": 0,
           "smell": "",
           "taste": "",
@@ -2122,10 +2134,187 @@
           "direction": "west"
         }
       ]
+    },
+    {
+      "name": "template",
+      "examine": "",
+      "desc": "",
+      "actors": [
+        {
+          "name": "",
+          "desc": "",
+          "examine": "",
+          "dialogues": [
+            {
+              "topic": "nothing",
+              "text": "",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "name":"template",
+          "examine": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": "",
+          "events": [
+            {
+              "text": "",
+              "type": "onUse",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onExamine",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onPickup",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onDrop",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "backgrounds": [
+        {
+          "name":"template",
+          "examine": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": false,
+          "pickupKey": ""
+        }
+      ],
+      "events": [
+        {
+          "text": "",
+          "type": "onEnter",
+          "whitelist": [
+            ""
+          ],
+          "blacklist": [
+            ""
+          ],
+          "key": [
+            ""
+          ],
+          "unkey": [
+            ""
+          ],
+          "show": [
+            {
+              "name": "",
+              "class": ""
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "roomName": "template",
+          "direction": "up"
+        }
+      ]
     }
+
     ],
   "startingKeys":[
-    "alive", "l"
+    "alive", "l", "bored"
   ],
   "initialGold": 10,
   "map": "1   2 - 3 \n|   |   |\n4 - 5   6\n|   |   |\n7   8 - 9"

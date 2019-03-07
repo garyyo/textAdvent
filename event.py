@@ -1,7 +1,8 @@
 from __future__ import annotations
 # noinspection PyUnresolvedReferences
 from typing import List
-from base import *
+# from base import *
+# from base import Room
 
 
 class Event:

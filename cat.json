@@ -390,7 +390,7 @@
       ],
       "events": [
         {
-          "text": "You awaken in front of a fountain, it was just a dream. Now to get on to your day job, finding a cat for an old lady.",
+          "text": "You awaken in front of a fountain. You remember that you need to find a cat for an old lady.",
           "type": "onEnter",
           "whitelist": [],
           "blacklist": [
@@ -942,5 +942,6 @@
   "startingKeys":[
     "alive"
   ],
-  "initialGold": 10
+  "initialGold": 10,
+  "weights": [0,0,1,0]
 }
