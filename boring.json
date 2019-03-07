@@ -172,7 +172,7 @@
       "backgrounds": [
         {
           "name":"Chandelier",
-          "examine": "",
+          "examine": "It lays on the floor like a broken chandelier would",
           "invDesc": "",
           "desc": "",
           "weight": 0,
@@ -206,7 +206,7 @@
           ]
         },
         {
-          "text": "He didn't actually tell you his wife's name... but he did die.",
+          "text": "He didn't actually tell you who he is... but he did die.",
           "type": "active",
           "whitelist": [
             "v", "talk-dt-exit"
@@ -249,7 +249,7 @@
               "topic": "gold bar",
               "text": "ah yeah, that button is a bit annoying. if you can get me a book from the bookshelf and a translation tablet from the pedestal i can give you that gold bar. I am not tall enough to reach them myself",
               "whitelist": [
-                "t"
+                "t", "talk-button-favor"
               ],
               "blacklist": [
                 ""
@@ -305,7 +305,7 @@
           "weight": 0,
           "smell": "",
           "taste": "",
-          "pickupable": false,
+          "pickupable": true,
           "hidden": true,
           "pickupKey": "",
           "events": [
@@ -357,13 +357,13 @@
               "text": "",
               "type": "onPickup",
               "whitelist": [
-                "talk-button-favordone"
+                ""
               ],
               "blacklist": [
                 ""
               ],
               "key": [
-                ""
+                "goldbar-pickup"
               ],
               "unkey": [
                 "goldbar-dropped"
@@ -388,7 +388,7 @@
                 "goldbar-dropped"
               ],
               "unkey": [
-                ""
+                "goldbar-pickup"
               ],
               "show": [
                 {
@@ -439,6 +439,14 @@
             {
               "name": "wizard hat",
               "class": "actor"
+            },
+            {
+              "name": "book",
+              "class": "item"
+            },
+            {
+              "name": "tablet",
+              "class": "item"
             }
           ]
         }
@@ -607,7 +615,52 @@
           "taste": "",
           "pickupable": true,
           "hidden": true,
-          "pickupKey": "golden-key"
+          "events": [
+            {
+              "text": "",
+              "type": "onPickup",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                "golden-key"
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onDrop",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                "golden-key"
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            }
+          ]
         }
       ],
       "backgrounds": [
@@ -686,7 +739,7 @@
       "desc": "",
       "actors": [
         {
-          "name": "talking button",
+          "name": "button",
           "desc": "",
           "examine": "",
           "hidden": true,
@@ -717,7 +770,7 @@
                 ""
               ],
               "key": [
-                ""
+                "talk-button-favor"
               ],
               "unkey": [
                 ""
@@ -727,7 +780,7 @@
               "topic": "favor done",
               "text": "Ah yeah you, thanks bud. the last guy I asked to help me just sorta fell on his sword before I could even tell him what I wanted. I think he died. Just leave that on the ground",
               "whitelist": [
-                "t", "talk-button-hello"
+                "t", "talk-button-hello", "goldbar-pickup"
               ],
               "blacklist": [
                 "talk-button-favordone"
@@ -769,7 +822,6 @@
           "taste": "",
           "pickupable": true,
           "hidden": true,
-          "pickupKey": "gold-key",
           "events": [
             {
               "text": "",
@@ -825,7 +877,7 @@
                 ""
               ],
               "key": [
-                ""
+                "golden-key"
               ],
               "unkey": [
                 ""
@@ -850,7 +902,7 @@
                 ""
               ],
               "unkey": [
-                ""
+                "golden-key"
               ],
               "show": [
                 {
@@ -904,8 +956,8 @@
           ],
           "show": [
             {
-              "name": "",
-              "class": ""
+              "name": "button",
+              "class": "actor"
             }
           ]
         },
@@ -927,6 +979,12 @@
           "show": [
             {
               "name": "gold key",
+              "class": "item"
+            }
+          ],
+          "hide": [
+            {
+              "name": "gold bar",
               "class": "item"
             }
           ]
@@ -1184,11 +1242,12 @@
           "name":"holocube",
           "examine": "cubic, yet kinda rubbery, would probably bounce pretty well if you chucked it, but you are afraid you might not find it again.",
           "invDesc": "",
-          "desc": "it looks like a translation of the book",
+          "desc": "",
           "weight": 0,
           "smell": "",
           "taste": "",
           "pickupable": true,
+          "hidden": true,
           "pickupKey": "holocube-pickup"
         },
         {
@@ -1207,7 +1266,7 @@
       "backgrounds": [
         {
           "name":"pedestal",
-          "examine": "",
+          "examine": "it shows a picture of different creatures speaking to each other. maybe its a translation device.",
           "invDesc": "",
           "desc": "",
           "weight": 0,
@@ -1223,7 +1282,7 @@
                 "book-pickup"
               ],
               "blacklist": [
-                ""
+                "holocube-pickup"
               ],
               "key": [
                 "hologram-start"
@@ -1265,7 +1324,7 @@
       ],
       "events": [
         {
-          "text": "the hologram says: FILE 'BOOK TRANSLATION' NOT READABLE IN THIS DEVICE! PLEASE INSERT HOLOCUBE INTO COMPATIBLE DEVICE, THIS IS NOT A COMPATIBLE DEVICE! A holocube ejects and bounces off the floor in an erratic fashion.",
+          "text": "the hologram screams out: TRANSLATION WRITTEN! FILE 'BOOK TRANSLATION' NOT READABLE IN THIS DEVICE! PLEASE INSERT HOLOCUBE INTO COMPATIBLE DEVICE, THIS IS NOT A COMPATIBLE DEVICE! A holocube ejects and bounces off the floor in an erratic fashion.",
           "type": "active",
           "whitelist": [
             "hologram-start"
@@ -1282,7 +1341,7 @@
           "show": [
             {
               "name": "holocube",
-              "class": ""
+              "class": "item"
             }
           ]
         },
@@ -1458,7 +1517,7 @@
           "name":"note",
           "examine": "Hey, look behind the couch in room 3, I stuck something pretty good back there ;)",
           "invDesc": "",
-          "desc": "",
+          "desc": "something is written on it",
           "weight": 0,
           "smell": "",
           "taste": "",
@@ -1834,7 +1893,7 @@
           "smell": "",
           "taste": "",
           "pickupable": true,
-          "pickupKey": "golden-key",
+          "hidden": true,
           "events": [
             {
               "text": "",
@@ -1890,7 +1949,7 @@
                 ""
               ],
               "key": [
-                ""
+                "golden-key"
               ],
               "unkey": [
                 ""
@@ -1915,7 +1974,7 @@
                 ""
               ],
               "unkey": [
-                ""
+                "golden-key"
               ],
               "show": [
                 {
@@ -2066,7 +2125,8 @@
     }
     ],
   "startingKeys":[
-    "alive", "v"
+    "alive", "l"
   ],
-  "initialGold": 10
+  "initialGold": 10,
+  "map": "1   2 - 3 \n|   |   |\n4 - 5   6\n|   |   |\n7   8 - 9"
 }
