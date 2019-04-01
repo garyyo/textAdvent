@@ -102,40 +102,44 @@ class Parser:
 
         # if player misspelled actor name
         if verb == "talk" and direct_object:
-            actor = self.player.get_location().get_actor_visible(direct_object)
+            actor = self.player.get_location().get_actor_when_visible(direct_object)
             topic = " ".join(filter(lambda x: len(x) > 0, self.commandList[2:]))
             if actor is None:
-                direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_list(), 0.7)
-                actor = self.player.get_location().get_actor_visible(direct_object)
+                direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_visible(), 0.7)
+                actor = self.player.get_location().get_actor_when_visible(direct_object)
             if actor and not actor.check_topic(topic, self.player.get_keys()):
                 topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
             self.commandList[2] = topic
         if verb == "move":
             direct_object = self.sp_link_name(direct_object, self.player.get_location().get_links(), 0.7)
         if verb in ["pickup"]:
-            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_item_list(), 0.7)
+            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_items_visible(), 0.7)
         if verb in ["look"]:
-            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_item_list() +
-                                                self.player.get_location().get_actors_list(), 0.7)
+            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_items_visible() +
+                                                self.player.get_location().get_actors_visible(), 0.7)
         if verb in ["use"]:
             direct_object = self.sp_entity_name(
                 direct_object,
-                self.player.get_location().get_item_list() + self.player.get_inventory(),
+                self.player.get_location().get_items_visible() + self.player.get_inventory(),
                 0.7)
         if verb in ["drop"]:
             direct_object = self.sp_entity_name(direct_object, self.player.get_inventory(), 0.7)
+        if verb in ["give"]:
+            actor = self.player.get_location().get_actor_when_visible(direct_object)
+            give_object = self.sp_entity_name(self.commandList[2], self.player.get_inventory(), 0.7)
+            self.commandList[1] = actor
+            self.commandList[2] = give_object
         return direct_object
 
     def collect_entity_list(self):
         # get entities in location
         location = self.player.get_location()
-        entity_list = location.get_item_list()
-        entity_list += location.get_actors_list()
+        entity_list = location.get_items_visible()
+        entity_list += location.get_actors_visible()
 
         # get items in player inventory
         entity_list += self.player.get_inventory()
-
-        pass
+        return entity_list
 
     def collect_entities_from_entity(self, entity):
         return_list = [entity]
@@ -267,9 +271,9 @@ class ScenarioBuilder:
         # when the player model gets too far away from the current, offer a new quest
         best_scene = self.choose_scenario()
 
-        pprint(self.playerModel)
-        pprint(self.currentScene.get_weights())
-        pprint(best_scene.get_weights())
+        # pprint(self.playerModel)
+        # pprint(self.currentScene.get_weights())
+        # pprint(best_scene.get_weights())
         if best_scene == self.currentScene:
             # print("~~~everything is fine~~~")
             return False
@@ -462,6 +466,10 @@ class Scenario:
         if new_actor.get_name() in ["template", ""]:
             return None
 
+        if "events" in actor_json:
+            for eventJSON in actor_json["events"]:
+                new_actor.add_event(self.event_create(eventJSON, new_room, source_type="actor", source=new_actor))
+
         if "hidden" in actor_json:
             new_actor.hide()
 
@@ -585,10 +593,10 @@ class Scenario:
         self.eventList.append(new_event)
         return new_event
 
-    def distraction_generation(self, room, distract_type):
+    def distraction_generation(self, room, distraction_type):
         # get a list of distractions
         new_item = Background(
-            "distraction: type " + distract_type,
+            "distraction: type " + distraction_type,
             "aha you got distracted!",
             "aha you got distracted!",
             "aha you got distracted!",
@@ -598,7 +606,7 @@ class Scenario:
             "aha you got distracted!",
             room
         )
-        new_item.set_distractor(True)
+        new_item.set_distractor(True, distraction_type)
         new_item.hide()
 
         self.itemList.append(new_item)
@@ -686,7 +694,7 @@ class Display:
             self.add_print_list([self.color_text(actor.get_name(), "blue") + " starts to respond:"])
             self.add_print_list(["\t" + actor.speak_topic(topic, self.player)])
         else:
-            self.add_print_list([self.color_text("you talk into the aether to someone who isn't there", "red")])
+            self.reject("you talk into the aether to someone who isn't there")
 
     def inventory(self):
         margin_width = 8
@@ -739,7 +747,7 @@ class Display:
     def event(self, text):
         if text == "":
             return
-        self.add_print_list([self.color_text(text,"bold")])
+        self.add_print_list([self.color_text(text, "bold")])
 
     def topics_list(self, actor):
         topics_list = actor.get_topics_list(self.player.get_keys())
@@ -747,8 +755,9 @@ class Display:
 
         for chatKey, chatEntry in topics_list.items():
             print_list.append("\t" + self.color_text(chatEntry.get_topic(), "yellow"))
-        if print_list == []:
-            print_list.append(self.color_text("They don't want to talk.", "red"))
+        if not print_list:
+            self.reject("They don't want to talk.")
+            print_list.append(self.color_text("", "red"))
         else:
             print_list.insert(0, self.color_text(actor.get_name(), "blue") + " can talk about: ")
         self.add_print_list(print_list)
@@ -761,7 +770,7 @@ class Display:
 
     def actor_list(self):
         print_list = []
-        actor_list = self.player.get_location().get_actors_list()
+        actor_list = self.player.get_location().get_actors_visible()
         if len(actor_list) > 0:
             print_list.append(self.color_text("There is someone here:", "green"))
             for actor in actor_list:
@@ -773,12 +782,11 @@ class Display:
 
     def item_list(self):
         print_list = []
-        item_list = self.player.get_location().get_item_list()
+        item_list = self.player.get_location().get_items_visible()
         if len(item_list) > 0:
             print_list.append(self.color_text("There is something here:", "green"))
             for item in item_list:
-                if item.get_visible():
-                    print_list.append("\t" + self.color_text(item.get_name(), "yellow") + ": " + item.get_desc())
+                print_list.append("\t" + self.color_text(item.get_name(), "yellow") + ": " + item.get_desc())
         else:
             print_list.append(self.color_text("There is nothing of interest here", "green"))
 
@@ -865,11 +873,16 @@ class Act:
             "look": self.examine,
             "use": self.use,
             "key": self.key,
-            "map": self.map
+            "map": self.map,
+            "give": self.give
         }
         pass
 
-    def pre(self, commands):
+    def pre(self):
+        self.player.update_keyring()
+        self.player.get_location().update_keyring()
+        self.display.display_room()
+        self.display.print()
         pass
 
     def mid(self, commands):
@@ -892,11 +905,45 @@ class Act:
         verb = commands[0]
         target = commands[1]
         if verb == "talk":
-            actor = self.player.get_location().get_actor_visible(target)
+            actor = self.player.get_location().get_actor_when_visible(target)
             if actor is not None:
                 self.display.topics_list(actor)
-        self.display.display_room()
-        self.display.print()
+        pass
+
+    # give to npc
+    # todo: make this work when you have the proper item, and not work when you dont.
+    def give(self):
+        # give actor object
+        # find object in inventory
+        item_name = self.command[2]
+        item_ref = self.player.drop(item_name)
+
+        # find actor in world
+        actor_name = self.command[1]
+        actor_ref: Actor = self.player.get_location().get_actor_when_visible(actor_name)
+        keys = []
+        # check if actor wants this item?!?! check for keys
+        if actor_ref is not None and item_ref is not None:
+            # print("blah", actor_ref.get_events_type("onGive"))
+            #
+            #
+            #     keys.append(list(event.get_keys()))
+            #     print("keys", keys)
+            # self.player.has_keys(keys)
+
+            # check if the actor can accept the gift.
+            # look for an onGive event
+            for event in actor_ref.get_events_type("onGive"):
+                # for each event, check to see if player violates the keys
+                gift_allowed_flag = event.check_allowed(self.player.get_keys()) or gift_allowed_flag
+            if not gift_allowed_flag:
+                self.display.reject("They do not want that.")
+                return
+            else:
+                actor_ref.add_to_inventory(item_ref)
+                event_listener("onGive", self.player, self.display, entity=actor_ref)
+        else:
+            self.display.reject("error parsing string, please check spelling")
         pass
 
     # pick up from room
@@ -912,15 +959,12 @@ class Act:
             self.display.confirm_command("you cannot pick that up", False)
         pass
 
-    # give to npc
-    def give(self):
-        pass
-
     # place in room
     def drop(self):
         target = " ".join(self.command[1:]).strip()
         attempt = self.player.drop(target)
         if attempt is not None:
+            self.player.get_location().add_item(attempt)
             self.display.event("you have dropped " + target)
             event_listener("onDrop", self.player, self.display, entity=attempt)
         else:
@@ -943,7 +987,7 @@ class Act:
     def talk(self):
         target = self.command[1]
         topic = self.command[2]
-        actor = self.player.get_location().get_actor_visible(target)
+        actor = self.player.get_location().get_actor_when_visible(target)
         if actor is not None:
             if topic != "":
                 self.display.talk(actor, topic)
@@ -956,7 +1000,7 @@ class Act:
         target = " ".join(self.command[1:]).strip()
         entity = self.player.get_location().get_item(target)
         if entity is None:
-            entity = self.player.get_location().get_actor_visible(target)
+            entity = self.player.get_location().get_actor_when_visible(target)
         self.display.look(entity)
         if entity is not None:
             event_listener("onExamine", self.player, self.display, entity)
@@ -989,6 +1033,7 @@ class Act:
         pass
 
 
+# todo: show some distractions!
 def show_all_distractions(player, show=True):
     items = player.get_location().get_items()
     distraction_list = filter(lambda x: x.get_distractor(), items)
@@ -1000,6 +1045,19 @@ def show_all_distractions(player, show=True):
         pass
 
 
+def show_some_distractions(player: Player, distraction_type):
+    items = player.get_location().get_items()
+    actors = player.get_location().get_actors()
+    entities = items + actors
+    distraction_entities = list(filter(lambda x: x.get_distractor(), entities))
+    filtered_entities = list(filter(lambda x: x.distraction_type == distraction_type, distraction_entities))
+    for entity in distraction_entities:
+        entity.hide()
+    for entity in filtered_entities:
+        entity.show()
+    pass
+
+
 # todo: change print statement to use the display object.
 def event_listener(event_type, player, display: Display, entity: Entity = None):
     if entity is not None:
@@ -1007,14 +1065,15 @@ def event_listener(event_type, player, display: Display, entity: Entity = None):
     else:
         events = player.get_location().get_events()
     current_keys = copy.copy(player.get_keys())
+    print(event_type, events)
     for event in events:
         if event.get_type() == event_type:
-            # print("keys", current_keys)
+            print("keys", current_keys)
             # print("whitelist", event.whitelistKeys)
             # print("blacklist", event.blacklistKeys)
 
             if event.check_allowed(current_keys):
-                # print("event activated!")
+                print("event activated!")
                 display.event(event.activate(player))
             else:
                 # print("no event activated :(")
@@ -1055,72 +1114,9 @@ def main():
 
     dm = ScenarioBuilder()
 
-    test_cases = [
-        ['n',
-         'e',
-         'look at book',
-         'g b',
-         'grab book',
-         's',
-         'examine holocube',
-         'examine pedestal',
-         'use pede',
-         'pickup holocube',
-         'use pedestal',
-         's',
-         'look at projector',
-         'use pro',
-         'e',
-         'w',
-         'examine b',
-         'use bookshelf',
-         'grab keymold',
-         'e',
-         'use projector',
-         'pickup golden key',
-         'grab g',
-         'w',
-         'n'],
-        [
-            "w",
-            "t b",
-            "t b h",
-            "t b f",
-            "e",
-            "n",
-            "t w",
-            "t w g",
-            "e",
-            "s",
-            "grab tab",
-            "s",
-            "w",
-            "pickup b",
-            "n",
-            "n",
-            "t w",
-            "t w t",
-            "drop book",
-            "drop tablet",
-            "talk w",
-            "t w d",
-            "grab g",
-            "s",
-            "w",
-            "t b",
-            "t b favor done",
-            "drop gold",
-            "t b k",
-            "grab g",
-            "e",
-            "use g"
-        ]
-    ]
-    test_case_num = 0
+    test_case_num = 2
     command_history = []
-    # test_cases = []
-    # test_case_num = 0
-    testing = False
+    testing = True
     while True:
         scene = dm.get_scenario()
         if scene is None:
@@ -1144,11 +1140,13 @@ def main():
 
             if "bored" in player.keyring:
                 # print("gotcha")
-                pprint(player.keyring)
+                # pprint(player.keyring)
                 show_all_distractions(player)
+                # print("max: ", max(dm.playerModel, key=lambda x: dm.playerModel[x]))
+                show_some_distractions(player, max(dm.playerModel, key=lambda x: dm.playerModel[x]))
             else:
                 show_all_distractions(player, False)
-
+            act.pre()
             # input
             if testing and len(test_cases[test_case_num]) > 0:
                 command = test_cases[test_case_num].pop(0)
@@ -1191,5 +1189,78 @@ def trace_test(dm):
     dm.trace_quest()
     exit(0)
 
+
+def print_story():
+    # todo: print the current quest in an easy to parse manner. to make editing easier?
+
+
+    pass
+
+
+test_cases = [
+    ['n',
+         'e',
+         'look at book',
+         'g b',
+         'grab book',
+         's',
+         'examine holocube',
+         'examine pedestal',
+         'use pede',
+         'pickup holocube',
+         'use pedestal',
+         's',
+         'look at projector',
+         'use pro',
+         'e',
+         'w',
+         'examine b',
+         'use bookshelf',
+         'grab keymold',
+         'e',
+         'use projector',
+         'pickup golden key',
+         'grab g',
+         'w',
+     'n'],
+    [
+        "w",
+        "t b",
+        "t b h",
+        "t b f",
+        "e",
+        "n",
+        "t w",
+        "t w g",
+        "e",
+        "s",
+        "grab tab",
+        "s",
+        "w",
+        "pickup b",
+        "n",
+        "n",
+        "t w",
+        "t w t",
+        "drop book",
+        "drop tablet",
+        "talk w",
+        "t w d",
+        "grab g",
+        "s",
+        "w",
+        "t b",
+        "t b favor done",
+        "drop gold",
+        "t b k",
+        "grab g",
+        "e",
+        "use g"
+    ],
+    [
+        "pickup ball",
+        "give anton ball"
+    ]
+]
 
 main()

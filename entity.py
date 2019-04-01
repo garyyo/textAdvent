@@ -16,10 +16,12 @@ class Entity:
         self.name = name
         self.description = desc
         self.examine_desc = examine_desc
+        self.inventory = []
         self.visible = True
         self.events = []
         self.start_room = start_room
         self.distractor = False
+        self.distraction_type = ""
 
     def get_desc(self):
         if not self.visible:
@@ -48,6 +50,10 @@ class Entity:
     def get_events(self):
         return self.events
 
+    def get_events_type(self, event_type):
+        return list(filter(lambda x: x.get_type() == event_type, self.events))
+        pass
+
     def add_to_inventory(self, thing):
         # append item to inventory list
         self.inventory.append(thing)
@@ -65,8 +71,9 @@ class Entity:
     def get_inventory(self):
         return self.inventory
 
-    def set_distractor(self, is_distractor):
+    def set_distractor(self, is_distractor, distraction_type):
         self.distractor = is_distractor
+        self.distraction_type = distraction_type
 
     def get_distractor(self):
         return self.distractor
@@ -90,6 +97,7 @@ class Item(Entity):
         self.taste = taste
         self.size = size
         self.pickupable = pickupable
+        # todo: deprecate
         self.pickupKey = pickup_key
 
     def get_inv_desc(self):
@@ -110,6 +118,7 @@ class Item(Entity):
     def get_pickupable(self):
         return self.pickupable
 
+    # todo: deprecate
     def get_pickup_key(self):
         return self.pickupKey
 

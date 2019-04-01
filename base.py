@@ -24,6 +24,7 @@ class Room:
         self.added_keys = []
         self.removed_keys = []
         self.keyring = []
+    #     todo: does room need its own keyring?
 
     def add_item(self, item):
         if item:
@@ -40,11 +41,14 @@ class Room:
     def get_item_ref(self, index):
         return self.items[index]
 
-    def get_item_list(self):
+    def get_items_visible(self):
         return list(filter(lambda x: x.get_visible(), self.items))
 
-    def get_actors_list(self):
+    def get_actors_visible(self):
         return list(filter(lambda x: x.get_visible(), self.actors))
+
+    def get_actors(self):
+        return self.actors
 
     def get_desc(self):
         return self.description
@@ -62,7 +66,7 @@ class Room:
                 return actor
         return None
 
-    def get_actor_visible(self, actor_name):
+    def get_actor_when_visible(self, actor_name):
         for actor in self.actors:
             if actor.get_name().lower() == actor_name.lower() and actor.get_visible():
                 return actor
@@ -135,19 +139,27 @@ class Player:
         self.gold = 0
         self.map = map_chart
 
-    def get_location(self):
+    def get_location(self) -> Room:
         return self.location
 
     # get the index of an item in the players inventory, or None if it doesnt exist
+    # todo: all index tracking should be handled inside
     def get_inventory_index(self, item_name: str) -> int:
         for i in range(len(self.inventory)):
             if self.inventory[i].name.lower() == item_name.lower():
                 return i
 
+    def get_inventory_item_ref(self, item_name):
+        index = get_inventory_index(item_name)
+        return
+
+        pass
+
     def get_inventory(self):
         return self.inventory
 
-    # returns 1 if success, None if failure
+    # remove from room, add to inventory
+    # todo: move outside of player. this is an action
     def pickup(self, item_name):
         # find item in room
         item_index = self.location.get_items_index(item_name)
@@ -156,13 +168,13 @@ class Player:
 
         # if item is in current location, remove from room, add to inventory
         if item_index is not None:
-
             item = self.location.get_item_ref(item_index)
             if not item.get_pickupable():
                 return None
 
             self.location.remove_item(item_index)
             self.add_to_inventory(item)
+            # todo: deprecate
             self.add_key(item.get_pickup_key())
 
         # return item
@@ -174,15 +186,19 @@ class Player:
         item = None
         if item_index is not None:
             item = self.remove_from_inventory(item_index)
-            self.location.add_item(item)
-            self.add_key(item.get_pickup_key())
+            # self.location.add_item(item)
+            # todo: is this line needed?
+            # self.add_key(item.get_pickup_key())
             self.remove_key(item.get_pickup_key())
         return item
 
-    def add_to_inventory(self, thing):
+    def add_to_inventory(self, item_ref):
         # append item to inventory list
-        self.inventory.append(thing)
+        self.inventory.append(item_ref)
         pass
+
+    def remove_from_inventory(self, index):
+        return self.inventory.pop(index)
 
     def add_gold(self, gold):
         self.gold += gold
@@ -193,9 +209,6 @@ class Player:
     def get_gold(self):
         return self.gold
 
-    def remove_from_inventory(self, index):
-        return self.inventory.pop(index)
-
     def update_keyring(self):
         for key in self.added_keys:
             self.keyring.append(key)
@@ -204,6 +217,9 @@ class Player:
             if key in self.keyring:
                 self.keyring.remove(key)
         self.removed_keys = []
+
+    def get_keys(self):
+        return self.keyring
 
     def add_key(self, key):
         if key not in self.keyring:
@@ -217,13 +233,12 @@ class Player:
             return len(self.keyring)
         return None
 
-    # todo: put checking of keys inside the player class, instead of exclusively outside if
-    def get_keys(self):
-        return self.keyring
-
     def has_keys(self, keys):
+        print(self.keyring, type(self.keyring), keys, type(keys))
         return set(self.keyring).issubset(keys)
 
+    # update location
+    # todo: should this be moved outside because it represents an action, or stay because its updating internal stuff?
     def move(self, direction):
         links = self.location.get_links()
         for place in links:
@@ -232,6 +247,7 @@ class Player:
                 return True
         return None
 
+    # gives player keys from actor talk event
     def talk(self, actor, topic):
         if not actor.check_topic(topic, self.get_keys()):
             return

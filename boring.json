@@ -1024,13 +1024,13 @@
       "startLocation": true,
       "actors": [
         {
-          "name": "",
-          "desc": "",
-          "examine": "",
+          "name": "anton",
+          "desc": "the dev?",
+          "examine": "the dev!",
           "dialogues": [
             {
-              "topic": "nothing",
-              "text": "",
+              "topic": "test",
+              "text": "this is a test",
               "whitelist": [
                 ""
               ],
@@ -1044,7 +1044,98 @@
                 ""
               ]
             }
+          ],
+          "events": [
+            {
+              "text": "you fired an examine event",
+              "type": "onExamine",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "you picked up anton? this isnt possible",
+              "type": "onPickup",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "you dropped anton... this also isnt possible",
+              "type": "onDrop",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "you gave anton the ball-item, hurrah, hurrah!",
+              "type": "onGive",
+              "whitelist": [
+                "ball-item"
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            }
           ]
+
         }
       ],
       "items": [
@@ -1139,6 +1230,107 @@
               ],
               "unkey": [
                 ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name":"ball-item",
+          "examine": "",
+          "invDesc": "",
+          "desc": "",
+          "weight": 0,
+          "smell": "",
+          "taste": "",
+          "pickupable": true,
+          "pickupKey": "",
+          "events": [
+            {
+              "text": "",
+              "type": "onUse",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onExamine",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onPickup",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                "ball-item"
+              ],
+              "unkey": [
+                ""
+              ],
+              "show": [
+                {
+                  "name": "",
+                  "class": ""
+                }
+              ]
+            },
+            {
+              "text": "",
+              "type": "onDrop",
+              "whitelist": [
+                ""
+              ],
+              "blacklist": [
+                ""
+              ],
+              "key": [
+                ""
+              ],
+              "unkey": [
+                "ball-item"
               ],
               "show": [
                 {

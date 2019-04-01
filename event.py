@@ -52,8 +52,8 @@ class Event:
             name = ref[0]
             class_type = ref[1]
             if class_type == "actor":
-                if location.get_actor_visible(name):
-                    location.get_actor_visible(name).hide()
+                if location.get_actor_when_visible(name):
+                    location.get_actor_when_visible(name).hide()
             if class_type == "item":
                 if location.get_item(name):
                     location.get_item(name).hide()
