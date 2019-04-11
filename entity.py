@@ -138,41 +138,40 @@ class Container(Background):
 class Actor(Entity):
     # todo: add "doesnt want to talk" text option,
     # todo: so that actors have custom "doesnt want to talk to you text
-    dialogueList: Dict[str, Dialogue]
+    dialogue_list: Dict[str, Dialogue]
 
     def __init__(self, name, examine_desc, desc, start_room):
         Entity.__init__(self, name, examine_desc, desc, start_room)
-        self.dialogueList = {}
+        self.dialogue_list = {}
 
     def add_dialogue(self, chat: Dialogue):
-        self.dialogueList[chat.get_topic()] = chat
+        self.dialogue_list[chat.get_topic()] = chat
         pass
 
     # todo: move to Display class instead of in entity class
     def get_topics(self, keys):
         return_string = ""
-        for chatKey, chatEntry in self.dialogueList.items():
-            if chatEntry.check_allowed(keys):
-                return_string += chatEntry.get_topic() + "\n"
+        for chat_key, chat_entry in self.dialogue_list.items():
+            if chat_entry.check_allowed(keys):
+                return_string += chat_entry.get_topic() + "\n"
         if return_string == "":
             return "They don't want to talk"
         return_string = "Topics:\n" + return_string
         return return_string
 
     def get_topics_list(self, keys):
-        return {k: v for k, v in self.dialogueList.items() if v.check_allowed(keys)}
+        return {k: v for k, v in self.dialogue_list.items() if v.check_allowed(keys)}
 
     def check_topic(self, topic, keys):
-        if topic in self.dialogueList:
-            return self.dialogueList[topic].check_allowed(keys)
+        if topic in self.dialogue_list:
+            return self.dialogue_list[topic].check_allowed(keys)
         return False
 
     def speak_topic(self, topic, player):
-        if topic in self.dialogueList:
-            return self.dialogueList[topic].activate(player)
+        if topic in self.dialogue_list:
+            return self.dialogue_list[topic].activate(player)
         return ""
 
     def give_dialogue_keys(self, topic):
-        if topic in self.dialogueList:
-            return self.dialogueList[topic].get_keys()
-# todo: create enemies that the player can fight, and associated events. enemies just have some required tags to do a "fight" action on. extend them off of actors so they can have inventories (that they drop into the world on death?) and maybe you can just talk to them? maybe a hostile tag to see if you can talk to them? who knows.
+        if topic in self.dialogue_list:
+            return self.dialogue_list[topic].get_keys()

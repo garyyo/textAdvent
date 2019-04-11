@@ -34,7 +34,7 @@ class Event:
         self.room = room
 
     def activate(self, player):
-        location: Room = player.get_location()
+        location: Room = player.get_current_room()
         for ref in self.makeVisible:
             name = ref[0]
             class_type = ref[1]
@@ -67,9 +67,9 @@ class Event:
         for key in self.takeKeys:
             player.remove_key(key)
         for key in self.giveKeysRoom:
-            player.get_location().add_key(key)
+            player.get_current_room().add_key(key)
         for key in self.takeKeysRoom:
-            player.get_location().remove_key(key)
+            player.get_current_room().remove_key(key)
 
         return self.text
 
@@ -108,7 +108,8 @@ class Event:
 # it auto gets added to the list of whitelisted keys
 class Dialogue(Event):
     def __init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic, room):
-        Event.__init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic, room, source_type="dialogue")
+        Event.__init__(self, whitelist, blacklist, key, unkey, key_room, unkey_room, text, topic, room,
+                       source_type="dialogue")
 
     def get_topic(self):
         return self.type

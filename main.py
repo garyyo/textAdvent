@@ -5,6 +5,9 @@ import json
 import math
 import random
 from pprint import pprint
+import scipy.stats
+import numpy as np
+import matplotlib
 
 from base import *
 from entity import *
@@ -102,30 +105,30 @@ class Parser:
 
         # if player misspelled actor name
         if verb == "talk" and direct_object:
-            actor = self.player.get_location().get_actor_when_visible(direct_object)
+            actor = self.player.get_current_room().get_actor_when_visible(direct_object)
             topic = " ".join(filter(lambda x: len(x) > 0, self.commandList[2:]))
             if actor is None:
-                direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_actors_visible(), 0.7)
-                actor = self.player.get_location().get_actor_when_visible(direct_object)
+                direct_object = self.sp_entity_name(direct_object, self.player.get_current_room().get_actors_visible(), 0.7)
+                actor = self.player.get_current_room().get_actor_when_visible(direct_object)
             if actor and not actor.check_topic(topic, self.player.get_keys()):
                 topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
             self.commandList[2] = topic
         if verb == "move":
-            direct_object = self.sp_link_name(direct_object, self.player.get_location().get_links(), 0.7)
+            direct_object = self.sp_link_name(direct_object, self.player.get_current_room().get_links(), 0.7)
         if verb in ["pickup"]:
-            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_items_visible(), 0.7)
+            direct_object = self.sp_entity_name(direct_object, self.player.get_current_room().get_items_visible(), 0.7)
         if verb in ["look"]:
-            direct_object = self.sp_entity_name(direct_object, self.player.get_location().get_items_visible() +
-                                                self.player.get_location().get_actors_visible(), 0.7)
+            direct_object = self.sp_entity_name(direct_object, self.player.get_current_room().get_items_visible() +
+                                                self.player.get_current_room().get_actors_visible(), 0.7)
         if verb in ["use"]:
             direct_object = self.sp_entity_name(
                 direct_object,
-                self.player.get_location().get_items_visible() + self.player.get_inventory(),
+                self.player.get_current_room().get_items_visible() + self.player.get_inventory(),
                 0.7)
         if verb in ["drop"]:
             direct_object = self.sp_entity_name(direct_object, self.player.get_inventory(), 0.7)
         if verb in ["give"]:
-            actor = self.player.get_location().get_actor_when_visible(direct_object)
+            actor = self.player.get_current_room().get_actor_when_visible(direct_object)
             give_object = self.sp_entity_name(self.commandList[2], self.player.get_inventory(), 0.7)
             self.commandList[1] = actor
             self.commandList[2] = give_object
@@ -133,7 +136,7 @@ class Parser:
 
     def collect_entity_list(self):
         # get entities in location
-        location = self.player.get_location()
+        location = self.player.get_current_room()
         entity_list = location.get_items_visible()
         entity_list += location.get_actors_visible()
 
@@ -230,19 +233,25 @@ class Parser:
 
 class ScenarioBuilder:
     scenarioList: List[Scenario]
-    playerModel: Dict[str, float]
+    player_model: Dict[str, float]
     currentScene: Scenario
     state: str
-    action_list: List[str]
+    action_history: List[str]
     action_choices = ["pickup", "look", "talk", "use"]
 
-    def __init__(self):
+    def __init__(self, history_length=10):
         self.scenarioList = []
-        self.playerModel = {}
-        self.action_list = []
-        self.reset_model()
+        self.player_model = {}
+        self.current_model = {}
+        self.action_history = []
+        self.history_length = history_length
         self.build_scenarios(["boring.json", "cat.json"])
         self.state = "wait"
+
+        self.reset_model()
+        self.initialize_actions()
+        for action in self.action_choices:
+            self.current_model[action] = 0
         pass
 
     def build_scenarios(self, file_list):
@@ -256,56 +265,130 @@ class ScenarioBuilder:
     def choose_scenario(self):
         if len(self.scenarioList) == 0:
             return None
-        scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.playerModel.values())))
-        # scene = self.scenarioList[0]
+        # scene = min(self.scenarioList, key=lambda x: abs(sum(x.get_weights()) - sum(self.player_model.values())))
+        scene = self.scenarioList[0]
         # todo: re-enable when we have more scenes
         # self.scenarioList.remove(scene)
         return scene
 
-    def keys_from_model(self):
-        if self.player_status():
-            return ["bored"], []
-        return [], ["bored"]
+    def initialize_actions(self):
+        for i in range(self.history_length):
+            action = np.random.choice(list(self.player_model.keys()), p=list(self.player_model.values()))
+            self.action_history.append(action)
+        pass
 
-    def player_status(self):
-        # when the player model gets too far away from the current, offer a new quest
-        best_scene = self.choose_scenario()
+    def add_action(self, action):
+        if action in self.action_choices:
+            self.action_history.append(action)
+        self.action_choices = self.action_choices[:self.history_length]
+        pass
 
-        # pprint(self.playerModel)
-        # pprint(self.currentScene.get_weights())
-        # pprint(best_scene.get_weights())
-        if best_scene == self.currentScene:
-            # print("~~~everything is fine~~~")
-            return False
-        else:
-            return True
+    def update_model(self, command_array):
+        large_threshold = .5
+        small_threshold = .2
 
-    def update(self):
-        # check boredom
-        bored = self.boredom_detector()
-        # if bored change state to explore or exploit
-        if bored:
-            epsilon = .7
-            choice = random.random()
-            if epsilon > choice:
-                self.state = "explore"
-            else:
-                self.state = "exploit"
-        # based on the state, assign the player some amount
-        # of keys to help with them actually getting that choice.
+        # update action history
+        self.add_action(command_array[0])
 
-    def boredom_detector(self):
-        v = {'look': 0.3333333333333333,
-             'pickup': 0.3333333333333333,
-             'talk': 0.26666666666666666,
-             'use': 0.06666666666666667}
-        t = {'look': 0.0,
-             'pickup': 0.23529411764705882,
-             'talk': 0.7058823529411765,
-             'use': 0.058823529411764705}
-        l = {'look': 0.3125, 'pickup': 0.3125, 'talk': 0.0, 'use': 0.375}
+        # recalculate model
+        self.calculate_model()
 
-    def trace_quest(self):
+        # check against expected
+        difference = self.model_difference()
+        entropy = self.calculate_entropy()
+
+        # debug: difference
+        print("difference:", difference)
+        print("entropy:", entropy)
+
+        if difference is None or difference is np.nan:
+            print("this should never happen, you messed up chi-squared.")
+            return
+
+        # if difference is big, update model and trigger path change attempt
+        # todo: get rid of this warning.
+        if difference > large_threshold:
+            self.change_model()
+            self.path_change()
+            return
+
+        # if difference is small, deploy distraction
+        if difference > small_threshold:
+            # add intervention/distraction task
+            self.deploy_distraction()
+
+        # else continue on like normal.
+
+        pass
+
+    def calculate_model(self):
+        # based on the player action history, create a model, currently the relative frequency of all relevant actions
+        action_frequency = {}
+        # properly initalize
+        for action in self.action_choices:
+            action_frequency[action] = 0
+
+        for action in self.action_history:
+            if action not in action_frequency:
+                action_frequency[action] = 0
+            action_frequency[action] += 1
+
+        for action in action_frequency:
+            if action_frequency[action] == 0:
+                action_frequency[action] += .0001
+
+        # get average
+        for action in action_frequency:
+            action_frequency[action] = action_frequency[action] / self.history_length
+        self.current_model = action_frequency
+
+    def calculate_entropy(self):
+        def sort_dict(dictionary): return [v for k, v in sorted(dictionary.items())]
+
+        current = sort_dict(self.current_model)
+        expected = sort_dict(self.player_model)
+
+        return scipy.stats.entropy(current, expected)
+
+    def model_difference(self):
+        # expected cant have 0's
+        def sort_dict(dictionary): return [v for k, v in sorted(dictionary.items())]
+
+        current = sort_dict(self.current_model)
+        expected = sort_dict(self.player_model)
+
+        # print(current, self.current_model)
+        # print(expected, self.player_model)
+
+        difference, _ = scipy.stats.chisquare(current, expected)
+        return difference
+
+    # currently this just changes the player model to the action history calculated model,
+    # todo: in the future it should shift to an accepted quest path model.
+    def change_model(self):
+        self.player_model = copy.deepcopy(self.current_model)
+
+    # this should modify the player object to flag it for a path change.
+    def path_change(self):
+        print("path change initiated!")
+        pass
+
+    # this should modify the player object to flag it with what the player should be attempted to be distracted with.
+    def deploy_distraction(self):
+        print("distraction deployed!")
+        pass
+
+    # the rest of this shouldnt do anything useful0 for the player.
+    def reset_model(self):
+        for action in self.action_choices:
+            self.player_model[action] = random.random()
+        self.quest_dist()
+
+    def print_model(self):
+        print(self.player_model)
+
+    # todo: rewrite, it currently does jack shit
+    def trace_quests(self):
         def ei(event_list):
             return_string = ""
             if event_list is None:
@@ -368,31 +451,25 @@ class ScenarioBuilder:
 
         pass
 
-    def update_model(self, command_array):
-        # todo: this needs to be updated to take into account some earlier idea as to what the player prefers
-        # todo: currently every action of the player can make a huge change as to what their model is.
-        # todo: have a previous model that the DM tracks, the current model, and the difference between the two
-        # todo: is the uncertainty. when the DM gives (and the player takes) an explore choice, the previous
-        # todo: model can be updated.
-
-        # add action to tracked list if its one of the tracked actions,
-        # and trim the list to the last x actions (50 right now)
-        if command_array[0] in self.action_choices:
-            self.action_list.append(command_array[0])
-            if len(self.action_list) > 5:
-                self.action_list = self.action_list[-50:]
-
-        # update the playermodel
-        if len(self.action_list) > 0:
-            for action in self.action_choices:
-                self.playerModel[action] = self.action_list.count(action)/len(self.action_list)
-
-    def reset_model(self):
-        for action in self.action_choices:
-            self.playerModel[action] = 0
-
-    def print_model(self):
-        print(self.playerModel)
+    # todo: rework this to actually tell if player is bored.
+    def quest_dist(self):
+        v = {'look': 0.3333333333333333,
+             'pickup': 0.3333333333333333,
+             'talk': 0.2666666666666666,
+             'use': 0.06666666666666667}
+        t = {'look': 0.000000000001,
+             'pickup': 0.23529411764705882,
+             'talk': 0.7058823529411765,
+             'use': 0.058823529411764705}
+        l = {'look': 0.3124, 'pickup': 0.3125, 'talk': 0.0001, 'use': 0.375}
+        r = {'look': random.random(),
+             'pickup': random.random(),
+             'talk': random.random(),
+             'use': random.random()}
+        self.player_model = r
+        list_sum = sum(self.player_model.values())
+        for key, value in self.player_model.items():
+            self.player_model[key] = value/list_sum
 
 
 class Scenario:
@@ -570,7 +647,6 @@ class Scenario:
         # todo: instead of finding things by name later, find them now and store reference instead of name.
         if "show" in event_json:
             for visibleJSON in event_json["show"]:
-
                 new_event.add_show([
                     visibleJSON["name"] if "name" in visibleJSON else "",
                     visibleJSON["class"] if "class" in visibleJSON else ""
@@ -630,14 +706,17 @@ class Display:
     print_list: List[List[str]]
 
     # pass in arbitrary objects and get proper formatting for their description.
-    def __init__(self, player):
+    def __init__(self, player, active=True):
         self.player = player
         self.print_list = []
+        self.active = active
 
     def add_print_list(self, print_list):
         self.print_list.append(print_list)
 
     def print(self):
+        if not self.active:
+            return
         for print_list in self.print_list:
             for line in print_list:
                 while len(line) > 0:
@@ -654,8 +733,11 @@ class Display:
         self.item_list()
 
     # todo replace with different functions for each functionality
+    # todo: also, get rid of the print statements in here >:(
     # im already doing this pretty much, but when i want to reject a message i use this? put rejections in the others
     def confirm_command(self, text: str, status: bool = True, command: str = None, args: List[str] = None):
+        if not self.active:
+            return
         # todo: figure out what to do here. do i even need this?
         print()
         # if status is false
@@ -704,11 +786,11 @@ class Display:
         gold_text_length = len(gold_text)
 
         if self.player.get_inventory():
-            max_item = max(self.player.get_inventory(), key=lambda x: len(x.get_inv_desc())+len(x.get_name()))
+            max_item = max(self.player.get_inventory(), key=lambda x: len(x.get_inv_desc()) + len(x.get_name()))
             inventory_width = margin_width + len(max_item.get_inv_desc()) + len(max(max_item.get_name()))
-            inventory_width = min(inventory_width,self.display_width + margin_width)
+            inventory_width = min(inventory_width, self.display_width + margin_width)
         else:
-            inventory_width = gold_text_length+1
+            inventory_width = gold_text_length + 1
 
         gold_text_spaced = gold_text + (math.floor((inventory_width - gold_text_length)) * " ")
 
@@ -763,14 +845,14 @@ class Display:
         self.add_print_list(print_list)
 
     def current_area(self):
-        name = self.color_text(self.player.get_location().get_name(), "blue")
-        desc = self.player.get_location().get_desc()
+        name = self.color_text(self.player.get_current_room().get_name(), "blue")
+        desc = self.player.get_current_room().get_desc()
         self.add_print_list([self.color_text("You are at the ", "green") + name + ":",
                              "\t" + desc])
 
     def actor_list(self):
         print_list = []
-        actor_list = self.player.get_location().get_actors_visible()
+        actor_list = self.player.get_current_room().get_actors_visible()
         if len(actor_list) > 0:
             print_list.append(self.color_text("There is someone here:", "green"))
             for actor in actor_list:
@@ -782,7 +864,7 @@ class Display:
 
     def item_list(self):
         print_list = []
-        item_list = self.player.get_location().get_items_visible()
+        item_list = self.player.get_current_room().get_items_visible()
         if len(item_list) > 0:
             print_list.append(self.color_text("There is something here:", "green"))
             for item in item_list:
@@ -794,11 +876,12 @@ class Display:
 
     def link_list(self):
         print_list = []
-        link_list = self.player.get_location().get_links()
+        link_list = self.player.get_current_room().get_links()
         if len(link_list) > 0:
             print_list.append(self.color_text("There are places to go:", "green"))
             for link in link_list:
-                print_list.append("\t" + self.color_text(link.get_direction(), "yellow") + ": room " + link.get_room_name())
+                print_list.append(
+                    "\t" + self.color_text(link.get_direction(), "yellow") + ": room " + link.get_room_name())
         else:
             print_list.append(self.color_text("There is nowhere to go", "green"))
 
@@ -849,13 +932,7 @@ class Display:
         return print_text, line
 
 
-# todo: objectify act. turn each command into an object with functions for pre during and post.
-# then we can just call:
-# act.pre(commandList)
-# act.active(commandList)
-# act.post(commandList)
 # can roll event listener in there so the main loop stays clean
-# pre would probably just throw away the commandList but might use previous command. if we even need pre...
 class Act:
     action_functions: Dict
     display: Display
@@ -880,7 +957,7 @@ class Act:
 
     def pre(self):
         self.player.update_keyring()
-        self.player.get_location().update_keyring()
+        self.player.get_current_room().update_keyring()
         self.display.display_room()
         self.display.print()
         pass
@@ -898,14 +975,14 @@ class Act:
     def post(self, commands):
 
         self.player.update_keyring()
-        self.player.get_location().update_keyring()
+        self.player.get_current_room().update_keyring()
 
         if commands is None:
             commands = ["", ""]
         verb = commands[0]
         target = commands[1]
         if verb == "talk":
-            actor = self.player.get_location().get_actor_when_visible(target)
+            actor = self.player.get_current_room().get_actor_when_visible(target)
             if actor is not None:
                 self.display.topics_list(actor)
         pass
@@ -920,7 +997,7 @@ class Act:
 
         # find actor in world
         actor_name = self.command[1]
-        actor_ref: Actor = self.player.get_location().get_actor_when_visible(actor_name)
+        actor_ref: Actor = self.player.get_current_room().get_actor_when_visible(actor_name)
         keys = []
         # check if actor wants this item?!?! check for keys
         if actor_ref is not None and item_ref is not None:
@@ -964,7 +1041,7 @@ class Act:
         target = " ".join(self.command[1:]).strip()
         attempt = self.player.drop(target)
         if attempt is not None:
-            self.player.get_location().add_item(attempt)
+            self.player.get_current_room().add_item(attempt)
             self.display.event("you have dropped " + target)
             event_listener("onDrop", self.player, self.display, entity=attempt)
         else:
@@ -987,7 +1064,7 @@ class Act:
     def talk(self):
         target = self.command[1]
         topic = self.command[2]
-        actor = self.player.get_location().get_actor_when_visible(target)
+        actor = self.player.get_current_room().get_actor_when_visible(target)
         if actor is not None:
             if topic != "":
                 self.display.talk(actor, topic)
@@ -998,9 +1075,9 @@ class Act:
     # look
     def examine(self):
         target = " ".join(self.command[1:]).strip()
-        entity = self.player.get_location().get_item(target)
+        entity = self.player.get_current_room().get_item(target)
         if entity is None:
-            entity = self.player.get_location().get_actor_when_visible(target)
+            entity = self.player.get_current_room().get_actor_when_visible(target)
         self.display.look(entity)
         if entity is not None:
             event_listener("onExamine", self.player, self.display, entity)
@@ -1014,7 +1091,7 @@ class Act:
     # activate the use event on object in (inventory or) room
     def use(self):
         target = " ".join(self.command[1:]).strip()
-        entity = self.player.get_location().get_item(target)
+        entity = self.player.get_current_room().get_item(target)
         if entity is not None:
             event_listener("onUse", self.player, self.display, entity)
             pass
@@ -1035,7 +1112,7 @@ class Act:
 
 # todo: show some distractions!
 def show_all_distractions(player, show=True):
-    items = player.get_location().get_items()
+    items = player.get_current_room().get_items()
     distraction_list = filter(lambda x: x.get_distractor(), items)
     for item in distraction_list:
         if show:
@@ -1046,8 +1123,8 @@ def show_all_distractions(player, show=True):
 
 
 def show_some_distractions(player: Player, distraction_type):
-    items = player.get_location().get_items()
-    actors = player.get_location().get_actors()
+    items = player.get_current_room().get_items()
+    actors = player.get_current_room().get_actors()
     entities = items + actors
     distraction_entities = list(filter(lambda x: x.get_distractor(), entities))
     filtered_entities = list(filter(lambda x: x.distraction_type == distraction_type, distraction_entities))
@@ -1063,17 +1140,17 @@ def event_listener(event_type, player, display: Display, entity: Entity = None):
     if entity is not None:
         events = entity.get_events()
     else:
-        events = player.get_location().get_events()
+        events = player.get_current_room().get_events()
     current_keys = copy.copy(player.get_keys())
-    print(event_type, events)
+    # print(event_type, events)
     for event in events:
         if event.get_type() == event_type:
-            print("keys", current_keys)
+            # print("keys", current_keys)
             # print("whitelist", event.whitelistKeys)
             # print("blacklist", event.blacklistKeys)
 
             if event.check_allowed(current_keys):
-                print("event activated!")
+                # print("event activated!")
                 display.event(event.activate(player))
             else:
                 # print("no event activated :(")
@@ -1100,105 +1177,11 @@ def win_condition(player):
 #     answers.append(True if input("do you want action") == "y" else False)
 #     return answers
 
-
-def main():
-    # print("Welcome to the game\n"
-    #       "you can do a couple things:\n"
-    #       "grab item, drop item\n"
-    #       "look\n"
-    #       "talk to people\n"
-    #       "talk to people about topic\n"
-    #       "move direction\n"
-    #       "inv\n")
-    # time.sleep(5)
-
-    dm = ScenarioBuilder()
-
-    test_case_num = 2
-    command_history = []
-    testing = True
-    while True:
-        scene = dm.get_scenario()
-        if scene is None:
-            print("you won the game! congrats.")
-            exit(1)
-        player = scene.get_player()
-        parser = Parser(player)
-        display = Display(player)
-        act = Act(display, player)
-
-        # todo: finish trace test
-        # trace_test(dm)
-        # have the player enter the room officially.
-        event_listener("onEnter", player, display)
-        act.post(None)
-
-        while not win_condition(player):
-            # TODO: implement pre/in/post act functions
-
-            # current state of pre act function
-
-            if "bored" in player.keyring:
-                # print("gotcha")
-                # pprint(player.keyring)
-                show_all_distractions(player)
-                # print("max: ", max(dm.playerModel, key=lambda x: dm.playerModel[x]))
-                show_some_distractions(player, max(dm.playerModel, key=lambda x: dm.playerModel[x]))
-            else:
-                show_all_distractions(player, False)
-            act.pre()
-            # input
-            if testing and len(test_cases[test_case_num]) > 0:
-                command = test_cases[test_case_num].pop(0)
-                print(">", command)
-            else:
-                command = input("> ")
-            if command == "record":
-                pprint(command_history)
-                continue
-            command_history.append(command)
-            command_array = parser.parse_commands(command)
-
-            dm.update_model(command_array)
-            dm.update()
-            if dm.player_status():
-                add, remove = dm.keys_from_model()
-                for key in add:
-                    # print(key)
-                    player.add_key(key)
-                for key in remove:
-                    player.remove_key(key)
-
-            # dm.print_model()
-
-            # interpret input
-
-            act.mid(command_array)
-
-            player.update_keyring()
-            event_listener("active", player, display)
-
-            act.post(command_array)
-
-        # give the player some blank space to look at
-        input("Press enter to continue...")
-        print("\n\n\n\n\n\n\n\n")
-
-
-def trace_test(dm):
-    dm.trace_quest()
-    exit(0)
-
-
-def print_story():
-    # todo: print the current quest in an easy to parse manner. to make editing easier?
-
-
-    pass
-
-
-test_cases = [
-    ['n',
+class History:
+    player: Player
+    saved_commands: List
+    test_commands = [
+        ['n',
          'e',
          'look at book',
          'g b',
@@ -1222,45 +1205,227 @@ test_cases = [
          'pickup golden key',
          'grab g',
          'w',
-     'n'],
-    [
-        "w",
-        "t b",
-        "t b h",
-        "t b f",
-        "e",
-        "n",
-        "t w",
-        "t w g",
-        "e",
-        "s",
-        "grab tab",
-        "s",
-        "w",
-        "pickup b",
-        "n",
-        "n",
-        "t w",
-        "t w t",
-        "drop book",
-        "drop tablet",
-        "talk w",
-        "t w d",
-        "grab g",
-        "s",
-        "w",
-        "t b",
-        "t b favor done",
-        "drop gold",
-        "t b k",
-        "grab g",
-        "e",
-        "use g"
-    ],
-    [
-        "pickup ball",
-        "give anton ball"
+         'n'],
+        [
+            "w",
+            "t b",
+            "t b h",
+            "t b f",
+            "e",
+            "n",
+            "t w",
+            "t w g",
+            "e",
+            "s",
+            "grab tab",
+            "s",
+            "w",
+            "pickup b",
+            "n",
+            "n",
+            "t w",
+            "t w t",
+            "drop book",
+            "drop tablet",
+            "talk w",
+            "t w d",
+            "grab g",
+            "s",
+            "w",
+            "t b",
+            "t b favor done",
+            "drop gold",
+            "t b k",
+            "grab g",
+            "e",
+            "use g"
+        ],
+        [
+            "pickup ball",
+            "give anton ball"
+        ]
     ]
-]
+    test_num = 0
+    test_flag = False
+    dm_test_flag = True
+
+    def __init__(self, player, auto_turns=10):
+        self.counter = 0
+        self.auto_turns = auto_turns
+        self.player = player
+        self.saved_commands = []
+        self.dm_test_commands = []
+        self.set_model()
+
+        self.true_model = dict(look=random.random(), pickup=random.random(), talk=random.random(), use=random.random())
+
+        list_sum = sum(self.true_model.values())
+        for key, value in self.true_model.items():
+            self.true_model[key] = value / list_sum
+
+    def record_commands(self):
+        pass
+
+    def print_commands(self):
+        pprint(self.saved_commands)
+        pass
+
+    def auto_command(self, model=None):
+        self.counter += 1
+        if self.counter > self.auto_turns:
+            return None
+        if self.test_flag and self.test_commands[self.test_num]:
+            return self.test_commands[self.test_num].pop(0)
+        if self.dm_test_flag:
+            return self.get_action_from_model(model)
+        else:
+            return None
+
+    def update(self, command):
+        # record command
+        self.saved_commands.append(command)
+        pass
+
+    def get_action_from_model(self, true_model=None):
+        if true_model is None:
+            true_model = self.true_model
+
+        # generate action
+        partial_action = np.random.choice(list(true_model.keys()), p=list(true_model.values()))
+
+        # check to see if there are entities in the current room that are consistent with that action
+        # find_all_entities_ir_room()
+        # if actors, check if dialogs exist and player has keys for it
+        # (with some probability to talk even if keys dont exist?)
+        full_action = self.expand_command(partial_action)
+
+        # if a valid action doesnt exist
+        if full_action is None:
+            # todo: try other commands with some prob?
+            # current: move to other room.
+            full_action = random.choice(["n","s","e","w"])
+            pass
+
+        return full_action
+
+    def expand_command(self, partial_command):
+        translation = {
+            "pickup": "onPickup",
+            "look": "onExamine",
+            "talk": "dialogue",
+            "use": "onUse"
+        }
+        if partial_command in translation:
+            event_type = translation[partial_command]
+        else:
+            return None
+        # room.get_entities? only the ones that are visible though
+        current_room = self.player.get_current_room()
+        all_entities = current_room.get_actors_visible() + current_room.get_items_visible()
+
+        for entity in all_entities:
+            # special case handling for dialogue
+            if event_type == "dialogue":
+                if type(entity) == Actor:
+                    topics = entity.get_topics_list(self.player.get_keys()).values()
+                    if len(topics) :
+                        return None
+                    dialogue = random.choice(topics)
+                    return partial_command + " " + entity.get_name() + dialogue.get_topic()
+                continue
+
+            # non-examine events only work on Items
+            if event_type != "onExamine":
+                if type(entity) != Item:
+                    continue
+
+            events = entity.get_events_type(event_type)
+            if not events:
+                return None
+            for event in events:
+                if event.check_allowed(self.player.get_keys()):
+                    return partial_command + " " + entity.get_name()
+
+        return None
+
+    def set_model(self, true_model=None):
+        self.true_model = true_model
+        pass
+
+
+def main():
+    # print("Welcome to the game\n"
+    #       "you can do a couple things:\n"
+    #       "grab item, drop item\n"
+    #       "look\n"
+    #       "talk to people\n"
+    #       "talk to people about topic\n"
+    #       "move direction\n"
+    #       "inv\n")
+    # time.sleep(5)
+
+    dm = ScenarioBuilder(history_length=30)
+
+    while True:
+        scene = dm.get_scenario()
+        if scene is None:
+            print("you won the game! congrats.")
+            exit(1)
+        player = scene.get_player()
+        parser = Parser(player)
+        history = History(player, auto_turns=30)
+        display = Display(player, False)
+        act = Act(display, player)
+
+        history.set_model(dict(look=.1, pickup=.1, talk=.1, use=.7))
+
+        # todo: finish trace test
+        # trace_test(dm)
+
+        # have the player enter the room officially.
+        event_listener("onEnter", player, display)
+        act.post(None)
+
+        while not win_condition(player):
+            act.pre()
+
+            # input
+            command = history.auto_command()
+            if command is None:
+                command = input("> ")
+            else:
+                print(">", command)
+            # todo: move this to the act object
+            if command == "record":
+                history.print_commands()
+                continue
+
+            history.update(command)
+
+            command_array = parser.parse_commands(command)
+
+            dm.update_model(command_array)
+
+            act.mid(command_array)
+
+            player.update_keyring()
+            event_listener("active", player, display)
+
+            act.post(command_array)
+
+        # give the player some blank space to look at
+        input("Press enter to continue...")
+        print("\n\n\n\n\n\n\n\n")
+
+
+def trace_test(dm):
+    dm.trace_quests()
+    exit(0)
+
+
+def print_story():
+    # todo: print the current quest in an easy to parse manner. to make editing easier?
+    pass
+
 
 main()

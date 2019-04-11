@@ -5,7 +5,7 @@ from entity import *
 
 
 class Room:
-    links = []
+    links = List['Link']
     items: List[Item]
     actors: List[Actor]
     events: List[Event]
@@ -106,7 +106,7 @@ class Room:
             return len(self.keyring)
         return None
 
-    def get_links(self):
+    def get_links(self) -> List[Link]:
         return list(filter(lambda x: x.get_visible(), self.links))
 
     def get_all_links(self):
@@ -120,7 +120,7 @@ class Room:
 
 
 class Player:
-    location: Room
+    current_room: Room
     inventory: List[Item]
     conditions: List[str]
     keyring: List[str]
@@ -130,7 +130,7 @@ class Player:
     map: str
 
     def __init__(self, start_location: Room, starting_keys, map_chart="you have no map"):
-        self.location = start_location
+        self.current_room = start_location
         self.inventory = []
         self.conditions = []
         self.keyring = starting_keys
@@ -139,8 +139,8 @@ class Player:
         self.gold = 0
         self.map = map_chart
 
-    def get_location(self) -> Room:
-        return self.location
+    def get_current_room(self) -> Room:
+        return self.current_room
 
     # get the index of an item in the players inventory, or None if it doesnt exist
     # todo: all index tracking should be handled inside
@@ -162,17 +162,17 @@ class Player:
     # todo: move outside of player. this is an action
     def pickup(self, item_name):
         # find item in room
-        item_index = self.location.get_items_index(item_name)
+        item_index = self.current_room.get_items_index(item_name)
 
         item = None
 
         # if item is in current location, remove from room, add to inventory
         if item_index is not None:
-            item = self.location.get_item_ref(item_index)
+            item = self.current_room.get_item_ref(item_index)
             if not item.get_pickupable():
                 return None
 
-            self.location.remove_item(item_index)
+            self.current_room.remove_item(item_index)
             self.add_to_inventory(item)
             # todo: deprecate
             self.add_key(item.get_pickup_key())
@@ -240,10 +240,10 @@ class Player:
     # update location
     # todo: should this be moved outside because it represents an action, or stay because its updating internal stuff?
     def move(self, direction):
-        links = self.location.get_links()
+        links = self.current_room.get_links()
         for place in links:
             if place.get_direction() == direction:
-                self.location = place.get_location()
+                self.current_room = place.get_room()
                 return True
         return None
 
@@ -284,7 +284,7 @@ class Link:
     def get_room_name(self):
         return self.location.get_name()
 
-    def get_location(self):
+    def get_room(self):
         return self.location
 
     def get_direction(self):
