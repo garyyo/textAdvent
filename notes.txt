@@ -191,3 +191,10 @@ we are testing how changing the methods of selecting
 
 we want to ask question and give distractions to get the most informative view of the player model.
 we can give them all, but there are problems of overloading the
+
+compare a bunch fo different ways.
+eg:
+    1 best + 1 worst
+    1 best + 1 random
+    2 best
+    etc

@@ -182,7 +182,7 @@
           "pickupKey": ""
         },
         {
-          "name":"Examine Distraction",
+          "name":"author defined Examine Distraction",
           "examine": "you look at it, you hear some whirring in the distance, your examine stat goes up",
           "invDesc": "",
           "desc": "",
