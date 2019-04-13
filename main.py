@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import copy
 import json
+
 import math
 import random
 from pprint import pprint
 import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
-import statistics
+import scipy.spatial.distance
 
 from base import *
 from entity import *
@@ -248,6 +249,11 @@ class ScenarioBuilder:
         self.build_scenarios(["boring.json", "cat.json"])
         self.state = "wait"
         self.distraction_timeout = 0
+        self.max_distraction_timeout = 0
+        self.distracted = False
+
+        self.large_threshold = .2
+        self.small_threshold = 0
 
         if model is None:
             self.player_model = {}
@@ -290,11 +296,10 @@ class ScenarioBuilder:
         pass
 
     def update_model(self, command_array):
-        large_threshold = .6
-        small_threshold = .15
-
         # update distraction timeout
-        if self.distraction_timeout > 0:
+        if self.distraction_timeout <= 0:
+            self.distracted = False
+        if self.distracted:
             self.distraction_timeout -= 1
 
         # update action history
@@ -306,34 +311,39 @@ class ScenarioBuilder:
         # check against expected
         difference = self.model_difference()
         entropy = self.calculate_entropy()
+        distraction_list = self.deploy_distraction()
+
+        # print(difference)
 
         # debug: difference
         # print("difference:", difference)
         # print("entropy:", entropy)
 
+        self.large_threshold = self.large_threshold*.99
+
+        data = [difference, entropy, distraction_list]
         if difference is None or difference is np.nan:
             print("this should never happen, you messed up chi-squared.")
-            return difference, entropy, "", ""
+            return data, {"end": True, "distraction": False}
 
         # if difference is big, update model and trigger path change attempt
-        if difference > large_threshold:
+        if difference > self.large_threshold:
 
             self.change_model()
             self.path_change()
-            return difference, entropy, "end sim", ""
+            return data, {"end": True, "distraction": False}
 
         # if difference is small, deploy distraction
-        if difference > small_threshold:
+        if difference > self.small_threshold:
             # add intervention/distraction task
-            if self.distraction_timeout <= 0:
-                self.distraction_timeout = 3
-                best_distraction_type = self.deploy_distraction()
-
-                return difference, entropy, "deploy distraction", best_distraction_type
+            if not self.distracted:
+                self.distracted = True
+                self.distraction_timeout = self.max_distraction_timeout
+                return data, {"end": False, "distraction": True}
 
         # else continue on like normal.
 
-        return difference, entropy, "", ""
+        return data, {"end": False, "distraction": False}
 
     def calculate_model(self):
         # based on the player action history, create a model, currently the relative frequency of all relevant actions
@@ -355,6 +365,7 @@ class ScenarioBuilder:
         for action in action_frequency:
             action_frequency[action] = action_frequency[action] / self.history_length
         self.current_model = action_frequency
+        self.normalize_current_model()
 
     def calculate_entropy(self):
         def sort_dict(dictionary): return [v for k, v in sorted(dictionary.items())]
@@ -371,7 +382,11 @@ class ScenarioBuilder:
         current = sort_dict(self.current_model)
         expected = sort_dict(self.player_model)
 
-        difference, _ = scipy.stats.chisquare(current, expected)
+        # difference = scipy.spatial.distance.cityblock(current, expected)
+        difference = scipy.spatial.distance.cosine(current, expected)
+        # difference = scipy.spatial.distance.correlation(current, expected)
+        # difference, p = scipy.stats.chisquare(current, expected)
+        # print(difference)
         return difference
 
     # currently this just changes the player model to the action history calculated model,
@@ -386,17 +401,15 @@ class ScenarioBuilder:
 
     # this should modify the player object to flag it with what the player should be attempted to be distracted with.
     def deploy_distraction(self):
-        # print("distraction deployed!")
-        distraction_max = 0
-        distraction_argmax = ""
-        for key, value in self.player_model.items():
-            difference = abs(self.player_model[key] - self.current_model[key])
-            if difference > distraction_max:
-                distraction_max = difference
-                distraction_argmax = key
 
-        return distraction_argmax
-        pass
+        d1 = self.current_model
+        d2 = self.player_model
+
+        d3 = {key: abs(d1[key] - d2.get(key, 0)) for key in d1.keys()}
+        print(d3)
+        sorted_keys = sorted(d3.items(), key=lambda kv: kv[1], reverse=True)
+        keys = [k[0] for k in sorted_keys]
+        return keys
 
     # the rest of this shouldnt do anything useful0 for the player.
     def reset_model(self):
@@ -499,6 +512,11 @@ class ScenarioBuilder:
         list_sum = sum(self.player_model.values())
         for key, value in self.player_model.items():
             self.player_model[key] = value/list_sum
+
+    def normalize_current_model(self):
+        list_sum = sum(self.current_model.values())
+        for key, value in self.current_model.items():
+            self.current_model[key] = value/list_sum
 
 
 class Scenario:
@@ -1142,13 +1160,22 @@ class Act:
 # todo: show some distractions!
 def show_all_distractions(player, show=True):
     items = player.get_current_room().get_items()
-    distraction_list = filter(lambda x: x.get_distractor(), items)
-    for item in distraction_list:
-        if show:
-            item.show()
-        else:
-            item.hide()
-        pass
+    actors = player.get_current_room().get_actors()
+    entities = items + actors
+    distraction_entities = list(filter(lambda x: x.get_distractor(), entities))
+    for entity in distraction_entities:
+        entity.show()
+    pass
+
+
+def hide_all_distractions(player):
+    items = player.get_current_room().get_items()
+    actors = player.get_current_room().get_actors()
+    entities = items + actors
+    distraction_entities = list(filter(lambda x: x.get_distractor(), entities))
+    for entity in distraction_entities:
+        entity.hide()
+    pass
 
 
 def show_some_distractions(player: Player, distraction_type):
@@ -1221,15 +1248,6 @@ def win_condition(player):
         return True
     return False
 
-
-# def intro_q():
-#     answers = []
-#     print("answer with y or n")
-#     answers.append(True if input("do you like swords") == "y" else False)
-#     answers.append(True if input("do you like talking") == "y" else False)
-#     answers.append(True if input("do you want mystery") == "y" else False)
-#     answers.append(True if input("do you want action") == "y" else False)
-#     return answers
 
 class History:
     player: Player
@@ -1304,7 +1322,8 @@ class History:
     dm_test_flag = True
 
     def __init__(self, player, auto_turns=10):
-        self.counter = 0
+        # set to one to offset the offby one error
+        self.counter = 1
         self.auto_turns = auto_turns
         self.player = player
         self.saved_commands = []
@@ -1335,11 +1354,10 @@ class History:
             command = self.get_action_from_model(model)
         else:
             command = None
-        if command not in ["n", "s", "e", "w", "wait"]:
-            self.counter += 1
-            # print("``````````````````````````", self.counter)
+        # self.counter += 1
+        # if command not in ["n", "s", "e", "w", "wait"]:
+        self.counter += 1
         return command
-
     def update(self, command):
         # record command
         self.saved_commands.append(command)
@@ -1356,16 +1374,25 @@ class History:
         # find_all_entities_ir_room()
         # if actors, check if dialogs exist and player has keys for it
         # (with some probability to talk even if keys dont exist?)
-        full_action = self.expand_command(partial_action)
+        # full_action = None
+        # while full_action is None:
+        full_actions = {}
+        for action in true_model.keys():
+            full_action = self.expand_command(action)
+            if full_action is not None:
+                full_actions[action] = full_action
 
-        # if a valid action doesnt exist
-        if full_action is None:
-            # todo: try other commands with some prob?
-            # current: move to other room.
-            full_action = random.choice(["n", "s", "e", "w", "wait"])
-            pass
+        if not full_actions:
+            return "wait"
+        else:
+            # get rid of steps that dont exist.
+            partial_model = {}
+            for i in full_actions.keys():
+                partial_model[i] = true_model[i]
 
-        return full_action
+            self.normalize_player_model(partial_model)
+            partial_action = np.random.choice(list(partial_model.keys()), p=list(partial_model.values()))
+            return full_actions[partial_action]
 
     def expand_command(self, partial_command):
         translation = {
@@ -1423,39 +1450,75 @@ class History:
         self.true_model = true_model
         pass
 
+    def normalize_player_model(self, model):
+        list_sum = sum(model.values())
+        for key, value in model.items():
+            model[key] = value/list_sum
+        return model
+
+
+def model_distances(true_model, player_model):
+    def sort_dict(dictionary): return [v for k, v in sorted(dictionary.items())]
+
+    current = sort_dict(true_model)
+    expected = sort_dict(player_model)
+
+    difference = scipy.spatial.distance.cosine(current, expected)
+    return difference
+
 
 def main():
-    # print("Welcome to the game\n"
-    #       "you can do a cou switch_max, tight_layout=True)
-    for switch in range(0, swiple things:\n"
-    #       "grab item, drop item\n"
-    #       "look\n"
-    #       "talk to people\n"
-    #       "talk to people about topic\n"
-    #       "move direction\n"
-    #       "inv\n")
-    # time.sleep(5)
-    switch_max = 4
-    switch_list = ["all", "1 rand", "2 rand", "1 best"]
-    plot_avg = []
-    plot_path_change = []
-    for switch in range(0, switch_max, 1):
-        plot_avg.append([])
-        plot_path_change.append([])
-        trial_max = 100
-        for trial in range(trial_max):
-            dm = ScenarioBuilder(history_length=50, model=dict(look=.3, pickup=.1, talk=.5, use=.1))
+    DISPLAY_ON = True
+    # DISPLAY_ON = False
+    WITH_PAUSE = True
+    # WITH_PAUSE = False
+
+    # TRUE_MODEL = dict(look=.2, pickup=.4, talk=.1, use=.3)
+    # DM_MODEL = dict(look=.3, pickup=.1, talk=.4, use=.2)
+    TRUE_MODEL = dict(look=.1, pickup=.7, talk=.1, use=.1)
+    DM_MODEL = dict(look=.1, pickup=.1, talk=.7, use=.1)
+
+    MAX_MOVES = 100
+    TRIAL_MAX = 10
+    HISTORY_LENGTH = 10
+
+    switch_list = ["all    ", "1 rand ", "2 rand ", "1 far  ", "2 far  ", "1 close", "2 close", "1 f 1 c"]
+    switch_list_ordered = copy.deepcopy(switch_list)
+
+    random.shuffle(switch_list)
+    SWITCH_MAX = len(switch_list)
+    # SWITCH_MAX = 1
+
+    # plotting data
+    difference_data = []
+    path_change_turn = []
+    dist_change_turn = []
+
+    for switch in range(0, SWITCH_MAX, 1):
+        # switch = 3
+        if DISPLAY_ON:
+            print("~~~~~~~~~~~~new cycle~~~~~~~~~~")
+        print("type:", switch_list[switch])
+        # create new entry in plot
+        difference_data.append([])
+        path_change_turn.append([])
+        dist_change_turn.append([])
+
+        for trial in range(TRIAL_MAX):
+            dm = ScenarioBuilder(history_length=HISTORY_LENGTH, model=copy.deepcopy(DM_MODEL))
+
             scene = dm.get_scenario()
+
             if scene is None:
                 print("you won the game! congrats.")
                 exit(1)
             player = scene.get_player()
             parser = Parser(player)
-            history = History(player, auto_turns=40)
-            display = Display(player, False)
+            history = History(player, auto_turns=MAX_MOVES)
+            display = Display(player, DISPLAY_ON)
             act = Act(display, player)
 
-            history.set_model(dict(look=.7, pickup=.1, talk=.1, use=.1))
+            history.set_model(copy.deepcopy(TRUE_MODEL))
 
             # print("player model:", dm.player_model)
             # print("true model:", history.true_model)
@@ -1466,22 +1529,32 @@ def main():
             # have the player enter the room officially.
             event_listener("onEnter", player, display)
             act.post(None)
+
             difference_list = []
             entropy_list = []
-            counter = 0
-            add_flag = False
+
+            turn_counter = 0
+            path_change_flag = False
+            dist_change_flag = False
             while not win_condition(player):
-                counter += 1
+
                 act.pre()
 
                 # input
                 command = history.auto_command()
+                # if command not in ["n", "s", "e", "w", "wait"]:
+                turn_counter += 1
                 if command is None:
                     if history.dm_test_flag:
                         break
                     command = input("> ")
                 else:
-                    # print(">", command)
+                    if WITH_PAUSE:
+                        input()
+                    if DISPLAY_ON:
+                        print(">", command)
+                        print("distance:")
+                        print()
                     pass
                 # todo: move this to the act object
                 if command == "record":
@@ -1491,26 +1564,64 @@ def main():
                 history.update(command)
 
                 command_array = parser.parse_commands(command)
-                difference, entropy, message, best_distraction_type = dm.update_model(command_array)
 
-                if message == "deploy distraction":
-                    # exit(0)
-                    if switch == 0:
-                        # print("all")
-                        show_all_distractions(player, True)
-                    elif switch == 1:
-                        # print("rand")
+                data, msg = dm.update_model(command_array)
+                dm_difference, entropy, distraction_list = data
+
+                difference_tc = model_distances(TRUE_MODEL, dm.current_model)
+                # difference_tp = model_distances(TRUE_MODEL, dm.player_model)
+                difference = model_distances(dm.player_model, dm.current_model)
+
+                if DISPLAY_ON:
+                    print("play", dm.player_model)
+                    print("curr", dm.current_model)
+                    print("true", TRUE_MODEL)
+                    print("turn #:", turn_counter)
+                    print("dm difference", dm_difference)
+                    print("true to current diff:", difference_tc)
+                    print("distraction_list", distraction_list)
+
+                if difference > 50:
+                    # print("break here")
+                    pass
+                # if there is a distraction, add the distraction in one of several ways.
+                if msg["distraction"]:
+                    if DISPLAY_ON:
+                        print("distraction activated")
+
+                    hide_all_distractions(player)
+                    if switch_list[switch] == switch_list_ordered[0]:
+                        show_some_distractions(player, distraction_list[3])
+                        show_some_distractions(player, distraction_list[2])
+                        show_some_distractions(player, distraction_list[1])
+                        show_some_distractions(player, distraction_list[0])
+                    elif switch_list[switch] == switch_list_ordered[1]:
                         show_random_distraction(player)
-                    elif switch == 2:
-                        # print("rand")
+                    elif switch_list[switch] == switch_list_ordered[2]:
                         show_2_random_distraction(player)
-                    elif switch == 3:
-                        # print("rand")
-                        show_some_distractions(player, best_distraction_type)
-                if message == "end sim" and not add_flag:
+                    elif switch_list[switch] == switch_list_ordered[3]:
+                        show_some_distractions(player, distraction_list[0])
+                    elif switch_list[switch] == switch_list_ordered[4]:
+                        show_some_distractions(player, distraction_list[0])
+                        show_some_distractions(player, distraction_list[1])
+                    elif switch_list[switch] == switch_list_ordered[5]:
+                        show_some_distractions(player, distraction_list[3])
+                    elif switch_list[switch] == switch_list_ordered[6]:
+                        show_some_distractions(player, distraction_list[3])
+                        show_some_distractions(player, distraction_list[2])
+                    elif switch_list[switch] == switch_list_ordered[7]:
+                        show_some_distractions(player, distraction_list[0])
+                        show_some_distractions(player, distraction_list[3])
+                    if not dist_change_flag:
+                        dist_change_flag = True
+                        dist_change_turn[switch].append(turn_counter)
+
+                if msg["end"] and not path_change_flag:
                     # break
-                    add_flag = True
-                    plot_path_change[switch].append(counter)
+                    if DISPLAY_ON:
+                        print("~~~end simulation~~~")
+                    path_change_flag = True
+                    path_change_turn[switch].append(turn_counter)
                     pass
                 if command not in ["n", "s", "e", "w", "wait"]:
 
@@ -1525,32 +1636,34 @@ def main():
                 act.post(command_array)
 
             # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            if len(difference_list) != 41:
+            if len(difference_list) != MAX_MOVES:
                 print("wrong length")
-            if not plot_avg[switch]:
-                plot_avg[switch] = copy.deepcopy(difference_list)
-            else:
-                for i in range(len(difference_list)):
-                    plot_avg[switch][i] += difference_list[i]
+            difference_data[switch].append(difference_list)
 
             # give the player some blank space to look at
             # input("Press enter to continue...")
             # print("\n\n\n\n\n\n\n\n")
-        for i in range(len(plot_avg[switch])):
-            plot_avg[switch][i] = plot_avg[switch][i]/trial_max
+        # for i in range(len(difference_data[switch])):
+        #     difference_data[switch][i] = difference_data[switch][i]
     # fig, axs = plt.subplots(1, switch_max, tight_layout=True)
-    for switch in range(0, switch_max, 1):
-        # axs[switch].hist(plot_path_change[switch], bins=20)
-        plt.plot(plot_avg[switch], label=switch_list[switch])
-        # axs[switch].boxplot(plot_path_change[switch])
-        print(switch_list[switch], "\t", statistics.mean(plot_path_change[switch]))
-        # pprint(plot_path_change)
-    # print(statistics.mean(plot_path_change[0]) < statistics.mean(plot_path_change[1]))
+    for i in switch_list_ordered:
+        switch = switch_list.index(i)
+        # axs[switch].hist(path_change_turn[switch], bins=20)
+
+        difference_avg = np.mean(difference_data[switch], axis=0)
+        plt.plot(difference_avg, label=switch_list[switch])
+        # plt.scatter(y=path_change_turn[switch], x=range(len(path_change_turn[switch])))
+        path_change_avg = np.round(np.mean(path_change_turn[switch]), 2)
+        dist_change_avg = np.round(np.mean(dist_change_turn[switch]), 2)
+
+        print(switch_list[switch], "\t", np.round((path_change_avg - dist_change_avg), 2), path_change_avg,
+              len(path_change_turn[switch]))
+
     plt.legend()
     plt.ylabel('chi squared difference')
     plt.ylabel('chi squared difference average')
     plt.show()
-
+    print("thing")
     pass
 
 

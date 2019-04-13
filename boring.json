@@ -190,8 +190,7 @@
           "smell": "",
           "taste": "",
           "pickupable": false,
-          "pickupKey": "",
-          "distractor": "look"
+          "pickupKey": ""
         }
       ],
       "events": [
@@ -1021,7 +1020,6 @@
       "name": "5",
       "examine": "",
       "desc": "You awaken at a golden door. You need to get through it to escape this place.",
-      "startLocation": true,
       "actors": [
         {
           "name": "anton",
@@ -1139,107 +1137,7 @@
         }
       ],
       "items": [
-        {
-          "name":"template",
-          "examine": "",
-          "invDesc": "",
-          "desc": "",
-          "weight": 0,
-          "smell": "",
-          "taste": "",
-          "pickupable": false,
-          "pickupKey": "",
-          "events": [
-            {
-              "text": "",
-              "type": "onUse",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            },
-            {
-              "text": "",
-              "type": "onExamine",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            },
-            {
-              "text": "",
-              "type": "onPickup",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            },
-            {
-              "text": "",
-              "type": "onDrop",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            }
-          ]
-        },
+
         {
           "name":"ball-item",
           "examine": "",
@@ -2331,177 +2229,7 @@
       "name": "template",
       "examine": "",
       "desc": "",
-      "actors": [
-        {
-          "name": "",
-          "desc": "",
-          "examine": "",
-          "dialogues": [
-            {
-              "topic": "nothing",
-              "text": "",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ]
-            }
-          ]
-        }
-      ],
-      "items": [
-        {
-          "name":"template",
-          "examine": "",
-          "invDesc": "",
-          "desc": "",
-          "weight": 0,
-          "smell": "",
-          "taste": "",
-          "pickupable": false,
-          "pickupKey": "",
-          "events": [
-            {
-              "text": "",
-              "type": "onUse",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            },
-            {
-              "text": "",
-              "type": "onExamine",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            },
-            {
-              "text": "",
-              "type": "onPickup",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            },
-            {
-              "text": "",
-              "type": "onDrop",
-              "whitelist": [
-                ""
-              ],
-              "blacklist": [
-                ""
-              ],
-              "key": [
-                ""
-              ],
-              "unkey": [
-                ""
-              ],
-              "show": [
-                {
-                  "name": "",
-                  "class": ""
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "backgrounds": [
-        {
-          "name":"template",
-          "examine": "",
-          "invDesc": "",
-          "desc": "",
-          "weight": 0,
-          "smell": "",
-          "taste": "",
-          "pickupable": false,
-          "pickupKey": ""
-        }
-      ],
-      "events": [
-        {
-          "text": "",
-          "type": "onEnter",
-          "whitelist": [
-            ""
-          ],
-          "blacklist": [
-            ""
-          ],
-          "key": [
-            ""
-          ],
-          "unkey": [
-            ""
-          ],
-          "show": [
-            {
-              "name": "",
-              "class": ""
-            }
-          ]
-        }
-      ],
-      "links": [
-        {
-          "roomName": "template",
-          "direction": "up"
-        }
-      ]
+      "startLocation": true
     }
 
     ],
