@@ -8,6 +8,7 @@ import random
 from pprint import pprint
 import scipy.stats
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.spatial.distance
 
@@ -110,7 +111,8 @@ class Parser:
             actor = self.player.get_current_room().get_actor_when_visible(direct_object)
             topic = " ".join(filter(lambda x: len(x) > 0, self.commandList[2:]))
             if actor is None:
-                direct_object = self.sp_entity_name(direct_object, self.player.get_current_room().get_actors_visible(), 0.7)
+                direct_object = self.sp_entity_name(direct_object, self.player.get_current_room().get_actors_visible(),
+                                                    0.7)
                 actor = self.player.get_current_room().get_actor_when_visible(direct_object)
             if actor and not actor.check_topic(topic, self.player.get_keys()):
                 topic = self.sp_event_name(topic, actor.get_topics_list(self.player.get_keys()), .4)
@@ -237,8 +239,8 @@ class ScenarioBuilder:
     scenarioList: List[Scenario]
     player_model: Dict[str, float]
     currentScene: Scenario
+    player: Player
     state: str
-    action_history: List[str]
     action_choices = ["pickup", "look", "talk", "use"]
 
     def __init__(self, history_length=10, model=None):
@@ -251,6 +253,7 @@ class ScenarioBuilder:
         self.distraction_timeout = 0
         self.max_distraction_timeout = 0
         self.distracted = False
+        self.player = None
 
         self.large_threshold = .2
         self.small_threshold = 0
@@ -272,6 +275,11 @@ class ScenarioBuilder:
 
     def get_scenario(self):
         self.currentScene = self.choose_scenario()
+
+        # todo: initialize the player here, probably should get this to happen on its own in the scenario
+        self.currentScene.initialize_player()
+        self.player = self.currentScene.get_player()
+
         return self.currentScene
 
     def choose_scenario(self):
@@ -285,17 +293,18 @@ class ScenarioBuilder:
 
     def initialize_actions(self):
         for i in range(self.history_length):
+            possible_actions = list(random.choices(self.action_choices, k=math.floor(random.uniform(0, 4))))
             action = np.random.choice(list(self.player_model.keys()), p=list(self.player_model.values()))
-            self.action_history.append(action)
+            self.action_history.append((action, possible_actions))
         pass
 
-    def add_action(self, action):
+    def add_action(self, action, possible_actions):
         if action in self.action_choices:
-            self.action_history.append(action)
+            self.action_history.append((action, possible_actions))
         self.action_choices = self.action_choices[:self.history_length]
         pass
 
-    def update_model(self, command_array):
+    def update_model(self, command_array, possible_actions):
         # update distraction timeout
         if self.distraction_timeout <= 0:
             self.distracted = False
@@ -303,7 +312,7 @@ class ScenarioBuilder:
             self.distraction_timeout -= 1
 
         # update action history
-        self.add_action(command_array[0])
+        self.add_action(command_array[0], possible_actions)
 
         # recalculate model
         self.calculate_model()
@@ -319,7 +328,7 @@ class ScenarioBuilder:
         # print("difference:", difference)
         # print("entropy:", entropy)
 
-        self.large_threshold = self.large_threshold*.99
+        self.large_threshold = self.large_threshold * .99
 
         data = [difference, entropy, distraction_list]
         if difference is None or difference is np.nan:
@@ -328,7 +337,6 @@ class ScenarioBuilder:
 
         # if difference is big, update model and trigger path change attempt
         if difference > self.large_threshold:
-
             self.change_model()
             self.path_change()
             return data, {"end": True, "distraction": False}
@@ -352,7 +360,9 @@ class ScenarioBuilder:
         for action in self.action_choices:
             action_frequency[action] = 0
 
-        for action in self.action_history:
+        for action_tuple in self.action_history:
+            # print(action_tuple)
+            action, possible_actions = action_tuple
             if action not in action_frequency:
                 action_frequency[action] = 0
             action_frequency[action] += 1
@@ -389,6 +399,65 @@ class ScenarioBuilder:
         # print(difference)
         return difference
 
+    def get_available_actions(self):
+        def expand_command(partial_command, player):
+            translation = {
+                "pickup": "onPickup",
+                "look": "onExamine",
+                "talk": "dialogue",
+                "use": "onUse"
+            }
+            if partial_command in translation:
+                event_type = translation[partial_command]
+            else:
+                return None
+            # room.get_entities? only the ones that are visible though
+            current_room = player.get_current_room()
+            all_entities = current_room.get_actors_visible() + current_room.get_items_visible()
+            random.shuffle(all_entities)
+            for entity in all_entities:
+                # special case for distractions
+                if entity.get_distractor() and entity.distraction_type == partial_command:
+                    return partial_command + " " + entity.get_name()
+
+                # special case handling for dialogue
+                if event_type == "dialogue":
+                    if type(entity) == Actor:
+                        topics = list(entity.get_topics_list(player.get_keys()).values())
+                        if topics is None or not topics:
+                            continue
+                        dialogue = random.choice(topics)
+                        return partial_command + " " + entity.get_name() + " " + dialogue.get_topic()
+                    continue
+
+                # non-examine events only work on Items
+                if event_type != "onExamine":
+                    if type(entity) != Item:
+                        continue
+
+                events = entity.get_events_type(event_type)
+                if not events:
+                    continue
+                for event in events:
+                    if event.check_allowed(player.get_keys()):
+                        # check if the event is valid...
+                        # if the text, and give and take keys are empty, its not a valid event
+                        give, take = event.get_keys()
+                        text = event.text
+                        if text == "":
+                            if give == [""] and take == [""]:
+                                continue
+
+                        return partial_command + " " + entity.get_name()
+
+            return None
+
+        available_actions = []
+        for command in ["pickup", "look", "talk", "use"]:
+            if expand_command(command, self.player) is not None:
+                available_actions.append(command)
+        return available_actions
+
     # currently this just changes the player model to the action history calculated model,
     # todo: in the future it should shift to an accepted quest path model.
     def change_model(self):
@@ -406,12 +475,12 @@ class ScenarioBuilder:
         d2 = self.player_model
 
         d3 = {key: abs(d1[key] - d2.get(key, 0)) for key in d1.keys()}
-        print(d3)
+        # print(d3)
         sorted_keys = sorted(d3.items(), key=lambda kv: kv[1], reverse=True)
         keys = [k[0] for k in sorted_keys]
         return keys
 
-    # the rest of this shouldnt do anything useful0 for the player.
+    # the rest of this shouldn't do anything useful for the player.
     def reset_model(self):
         # todo: get rid of redundancy
         for action in self.action_choices:
@@ -511,12 +580,12 @@ class ScenarioBuilder:
     def normalize_player_model(self):
         list_sum = sum(self.player_model.values())
         for key, value in self.player_model.items():
-            self.player_model[key] = value/list_sum
+            self.player_model[key] = value / list_sum
 
     def normalize_current_model(self):
         list_sum = sum(self.current_model.values())
         for key, value in self.current_model.items():
-            self.current_model[key] = value/list_sum
+            self.current_model[key] = value / list_sum
 
 
 class Scenario:
@@ -540,6 +609,8 @@ class Scenario:
 
         self.room_compile()
         self.link_builder()
+
+        self.player = None
 
     def room_compile(self):
         for room_json in self.jsonData["rooms"]:
@@ -739,12 +810,15 @@ class Scenario:
     def get_weights(self):
         return self.jsonData["weights"] if "weights" in self.jsonData else [0, 0, 0, 0, 0]
 
-    def get_player(self):
+    def initialize_player(self):
         map_chart = self.jsonData["map"] if "map" in self.jsonData else "you have no map"
         starting_keys = self.jsonData["startingKeys"] if "startingKeys" in self.jsonData else []
         player = Player(self.roomList[self.start_location], starting_keys, map_chart)
         player.add_gold(self.jsonData["initialGold"] if "initialGold" in self.jsonData else 0)
-        return player
+        self.player = player
+
+    def get_player(self):
+        return self.player
 
 
 class Display:
@@ -1041,6 +1115,7 @@ class Act:
         # find object in inventory
         item_name = self.command[2]
         item_ref = self.player.drop(item_name)
+        gift_allowed_flag = False
 
         # find actor in world
         actor_name = self.command[1]
@@ -1322,7 +1397,7 @@ class History:
     dm_test_flag = True
 
     def __init__(self, player, auto_turns=10):
-        # set to one to offset the offby one error
+        # set to one to offset the off by one error
         self.counter = 1
         self.auto_turns = auto_turns
         self.player = player
@@ -1344,20 +1419,21 @@ class History:
         pass
 
     def auto_command(self, model=None):
-
+        possible_actions = None
         if self.counter > self.auto_turns:
             command = None
 
         elif self.test_flag and self.test_commands[self.test_num]:
             command = self.test_commands[self.test_num].pop(0)
         elif self.dm_test_flag:
-            command = self.get_action_from_model(model)
+            command, possible_actions = self.get_action_from_model(model)
         else:
             command = None
         # self.counter += 1
-        # if command not in ["n", "s", "e", "w", "wait"]:
-        self.counter += 1
-        return command
+        if command not in ["n", "s", "e", "w", "wait"]:
+            self.counter += 1
+        return command, possible_actions
+
     def update(self, command):
         # record command
         self.saved_commands.append(command)
@@ -1375,15 +1451,15 @@ class History:
         # if actors, check if dialogs exist and player has keys for it
         # (with some probability to talk even if keys dont exist?)
         # full_action = None
-        # while full_action is None:
+
         full_actions = {}
         for action in true_model.keys():
             full_action = self.expand_command(action)
             if full_action is not None:
                 full_actions[action] = full_action
 
-        if not full_actions:
-            return "wait"
+        if not full_actions or random.random() > .9:
+            return random.choice(["n", "s", "e", "w", "wait"]), list(full_actions.keys())
         else:
             # get rid of steps that dont exist.
             partial_model = {}
@@ -1392,7 +1468,12 @@ class History:
 
             self.normalize_player_model(partial_model)
             partial_action = np.random.choice(list(partial_model.keys()), p=list(partial_model.values()))
-            return full_actions[partial_action]
+            return full_actions[partial_action], list(full_actions.keys())
+
+        # full_action = self.expand_command(partial_action)
+        # if random.random() > .9 or full_action is None:
+        #     return random.choice(["n", "s", "e", "w", "wait"])
+        # return full_action
 
     def expand_command(self, partial_command):
         translation = {
@@ -1453,7 +1534,7 @@ class History:
     def normalize_player_model(self, model):
         list_sum = sum(model.values())
         for key, value in model.items():
-            model[key] = value/list_sum
+            model[key] = value / list_sum
         return model
 
 
@@ -1468,10 +1549,10 @@ def model_distances(true_model, player_model):
 
 
 def main():
-    DISPLAY_ON = True
-    # DISPLAY_ON = False
-    WITH_PAUSE = True
-    # WITH_PAUSE = False
+    # DISPLAY_ON = True
+    DISPLAY_ON = False
+    # WITH_PAUSE = True
+    WITH_PAUSE = False
 
     # TRUE_MODEL = dict(look=.2, pickup=.4, talk=.1, use=.3)
     # DM_MODEL = dict(look=.3, pickup=.1, talk=.4, use=.2)
@@ -1479,18 +1560,20 @@ def main():
     DM_MODEL = dict(look=.1, pickup=.1, talk=.7, use=.1)
 
     MAX_MOVES = 100
-    TRIAL_MAX = 10
-    HISTORY_LENGTH = 10
+    TRIAL_MAX = 1
+    HISTORY_LENGTH = 20
 
-    switch_list = ["all    ", "1 rand ", "2 rand ", "1 far  ", "2 far  ", "1 close", "2 close", "1 f 1 c"]
+    switch_list = ["all    ", "1 rand ", "2 rand ", "1 far  ", "2 far  ", "1 close", "2 close", "1 far 1 close", "2 middle"]
     switch_list_ordered = copy.deepcopy(switch_list)
 
     random.shuffle(switch_list)
-    SWITCH_MAX = len(switch_list)
-    # SWITCH_MAX = 1
+    # SWITCH_MAX = len(switch_list)
+    SWITCH_MAX = 1
 
     # plotting data
     difference_data = []
+    difference_tc_data = []
+    difference_tp_data = []
     path_change_turn = []
     dist_change_turn = []
 
@@ -1498,9 +1581,11 @@ def main():
         # switch = 3
         if DISPLAY_ON:
             print("~~~~~~~~~~~~new cycle~~~~~~~~~~")
-        print("type:", switch_list[switch])
+            print("type:", switch_list[switch])
         # create new entry in plot
         difference_data.append([])
+        difference_tp_data.append([])
+        difference_tc_data.append([])
         path_change_turn.append([])
         dist_change_turn.append([])
 
@@ -1531,6 +1616,8 @@ def main():
             act.post(None)
 
             difference_list = []
+            difference_tc_list = []
+            difference_tp_list = []
             entropy_list = []
 
             turn_counter = 0
@@ -1541,9 +1628,9 @@ def main():
                 act.pre()
 
                 # input
-                command = history.auto_command()
-                # if command not in ["n", "s", "e", "w", "wait"]:
-                turn_counter += 1
+                command, possible_actions = history.auto_command()
+                if command not in ["n", "s", "e", "w", "wait"]:
+                    turn_counter += 1
                 if command is None:
                     if history.dm_test_flag:
                         break
@@ -1565,11 +1652,11 @@ def main():
 
                 command_array = parser.parse_commands(command)
 
-                data, msg = dm.update_model(command_array)
+                data, msg = dm.update_model(command_array, possible_actions)
                 dm_difference, entropy, distraction_list = data
 
                 difference_tc = model_distances(TRUE_MODEL, dm.current_model)
-                # difference_tp = model_distances(TRUE_MODEL, dm.player_model)
+                difference_tp = model_distances(TRUE_MODEL, dm.player_model)
                 difference = model_distances(dm.player_model, dm.current_model)
 
                 if DISPLAY_ON:
@@ -1582,7 +1669,7 @@ def main():
                     print("distraction_list", distraction_list)
 
                 if difference > 50:
-                    # print("break here")
+                    # print("breakpoint here")
                     pass
                 # if there is a distraction, add the distraction in one of several ways.
                 if msg["distraction"]:
@@ -1612,6 +1699,9 @@ def main():
                     elif switch_list[switch] == switch_list_ordered[7]:
                         show_some_distractions(player, distraction_list[0])
                         show_some_distractions(player, distraction_list[3])
+                    elif switch_list[switch] == switch_list_ordered[8]:
+                        show_some_distractions(player, distraction_list[1])
+                        show_some_distractions(player, distraction_list[2])
                     if not dist_change_flag:
                         dist_change_flag = True
                         dist_change_turn[switch].append(turn_counter)
@@ -1620,12 +1710,14 @@ def main():
                     # break
                     if DISPLAY_ON:
                         print("~~~end simulation~~~")
+                        break
                     path_change_flag = True
                     path_change_turn[switch].append(turn_counter)
                     pass
                 if command not in ["n", "s", "e", "w", "wait"]:
-
                     difference_list.append(difference)
+                    difference_tc_list.append(difference_tc)
+                    difference_tp_list.append(difference_tp)
                     entropy_list.append(entropy)
 
                 act.mid(command_array)
@@ -1639,6 +1731,8 @@ def main():
             if len(difference_list) != MAX_MOVES:
                 print("wrong length")
             difference_data[switch].append(difference_list)
+            difference_tc_data[switch].append(difference_tc_list)
+            difference_tp_data[switch].append(difference_tp_list)
 
             # give the player some blank space to look at
             # input("Press enter to continue...")
@@ -1646,6 +1740,38 @@ def main():
         # for i in range(len(difference_data[switch])):
         #     difference_data[switch][i] = difference_data[switch][i]
     # fig, axs = plt.subplots(1, switch_max, tight_layout=True)
+    if len(switch_list) == SWITCH_MAX:
+        switch_list_parsed = switch_list_ordered
+    else:
+        print("parsed", SWITCH_MAX)
+        switch_list_parsed = switch_list[:SWITCH_MAX]
+        pprint(switch_list_parsed)
+    for i in switch_list_parsed:
+        switch = switch_list.index(i)
+        print(switch)
+        # axs[switch].hist(path_change_turn[switch], bins=20)
+
+        difference_avg = np.mean(difference_data[switch], axis=0)
+        plt.plot(difference_avg, label=switch_list[switch])
+        path_change_avg = np.round(np.mean(path_change_turn[switch]), 2)
+        dist_change_avg = np.round(np.mean(dist_change_turn[switch]), 2)
+
+        print(switch_list[switch], "\t", np.round((path_change_avg - dist_change_avg), 2))
+
+    plot_differences(switch_list_parsed, switch_list, difference_data, "Player Model vs. Action Model")
+    plot_differences(switch_list_parsed, switch_list, difference_tc_data, "True Model vs. Current Model")
+    plot_differences(switch_list_parsed, switch_list, difference_tp_data, "True Model vs. Player Model")
+
+    print("thing")
+    pass
+
+
+def plot_differences(switch_list_ordered, switch_list, difference_data, plot_title):
+    # mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["#000000", "#004949", "#009292", "#ff6db6", "#ffb6db",
+    #                                                     "#490092", "#006ddb", "#b66dff", "#6db6ff", "#b6dbff",
+    #                                                     "#920000", "#924900", "#db6d00", "#24ff24", "#ffff6d"])
+    plt.clf()
+    # plt.gray()
     for i in switch_list_ordered:
         switch = switch_list.index(i)
         # axs[switch].hist(path_change_turn[switch], bins=20)
@@ -1653,18 +1779,13 @@ def main():
         difference_avg = np.mean(difference_data[switch], axis=0)
         plt.plot(difference_avg, label=switch_list[switch])
         # plt.scatter(y=path_change_turn[switch], x=range(len(path_change_turn[switch])))
-        path_change_avg = np.round(np.mean(path_change_turn[switch]), 2)
-        dist_change_avg = np.round(np.mean(dist_change_turn[switch]), 2)
 
-        print(switch_list[switch], "\t", np.round((path_change_avg - dist_change_avg), 2), path_change_avg,
-              len(path_change_turn[switch]))
-
+    plt.title(plot_title)
     plt.legend()
-    plt.ylabel('chi squared difference')
-    plt.ylabel('chi squared difference average')
+    plt.xlabel('Turn Number')
+    plt.ylabel('Distance Between Models')
+    plt.savefig("figure " + plot_title + ".png")
     plt.show()
-    print("thing")
-    pass
 
 
 def trace_test(dm):

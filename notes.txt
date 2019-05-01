@@ -198,3 +198,10 @@ eg:
     1 best + 1 random
     2 best
     etc
+
+
+
+
+implement the recording of actions presented along with the action taken...
+
+action preference ordering over frequency.

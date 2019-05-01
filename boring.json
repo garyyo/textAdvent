@@ -1020,6 +1020,7 @@
       "name": "5",
       "examine": "",
       "desc": "You awaken at a golden door. You need to get through it to escape this place.",
+      "startLocation": true,
       "actors": [
         {
           "name": "anton",
@@ -2228,8 +2229,7 @@
     {
       "name": "template",
       "examine": "",
-      "desc": "",
-      "startLocation": true
+      "desc": ""
     }
 
     ],
