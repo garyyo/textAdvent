@@ -205,3 +205,7 @@ eg:
 implement the recording of actions presented along with the action taken...
 
 action preference ordering over frequency.
+
+
+figure out preference elicitation something something 20 questions
+find out how to craft some hypothesises, and find how to reject the majority of those.

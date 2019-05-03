@@ -317,10 +317,18 @@ class ScenarioBuilder:
         # recalculate model
         self.calculate_model()
 
+        # get available action
+        available_actions = self.get_available_actions()
+
         # check against expected
         difference = self.model_difference()
         entropy = self.calculate_entropy()
-        distraction_list = self.deploy_distraction()
+
+
+        # given those actions which other action is most probable?
+        distraction_list = self.get_action_prob(available_actions)
+
+        # distraction_list = self.deploy_distraction()
 
         # print(difference)
 
@@ -457,6 +465,26 @@ class ScenarioBuilder:
             if expand_command(command, self.player) is not None:
                 available_actions.append(command)
         return available_actions
+
+    def get_action_prob(self, available_actions=None):
+        if available_actions is None:
+            available_actions = self.action_choices
+        available_actions = set(available_actions)
+        action_closeness = {self.action_choices[x]: 0 for x in range(len(self.action_choices))}
+        for entry in self.action_history:
+            action_closeness[entry[0]] = (len(available_actions.intersection(set(entry[1])))+1) / (len(available_actions)+1)
+        for key in action_closeness:
+            action_closeness[key] /= len(self.action_history)
+
+        ordered_actions = sorted(self.action_choices, key=lambda x: action_closeness[x], reverse=True)
+
+        # pprint(self.action_history)
+        # pprint(available_actions)
+        # pprint(action_closeness)
+        # pprint(ordered_actions)
+        #
+        # exit(0)
+        return ordered_actions
 
     # currently this just changes the player model to the action history calculated model,
     # todo: in the future it should shift to an accepted quest path model.
@@ -1459,6 +1487,7 @@ class History:
                 full_actions[action] = full_action
 
         if not full_actions or random.random() > .9:
+            # todo: figure out available directions.
             return random.choice(["n", "s", "e", "w", "wait"]), list(full_actions.keys())
         else:
             # get rid of steps that dont exist.
