@@ -1487,8 +1487,9 @@ class History:
                 full_actions[action] = full_action
 
         if not full_actions or random.random() > .9:
-            # todo: figure out available directions.
-            return random.choice(["n", "s", "e", "w", "wait"]), list(full_actions.keys())
+            # create list of available directions.
+            available_directions = [x.get_direction() for x in self.player.get_current_room().get_links()]
+            return random.choice(available_directions + ["wait"]), list(full_actions.keys())
         else:
             # get rid of steps that dont exist.
             partial_model = {}
@@ -1585,19 +1586,22 @@ def main():
 
     # TRUE_MODEL = dict(look=.2, pickup=.4, talk=.1, use=.3)
     # DM_MODEL = dict(look=.3, pickup=.1, talk=.4, use=.2)
-    TRUE_MODEL = dict(look=.1, pickup=.7, talk=.1, use=.1)
+    TRUE_MODEL = dict(look=.1, pickup=.5, talk=.3, use=.1)
     DM_MODEL = dict(look=.1, pickup=.1, talk=.7, use=.1)
 
-    MAX_MOVES = 100
-    TRIAL_MAX = 1
-    HISTORY_LENGTH = 20
+    # TRUE_MODEL = dict(look=.1, pickup=.1, talk=.7, use=.1)
+    # DM_MODEL = dict(look=.1, pickup=.1, talk=.7, use=.1)
 
-    switch_list = ["all    ", "1 rand ", "2 rand ", "1 far  ", "2 far  ", "1 close", "2 close", "1 far 1 close", "2 middle"]
+    MAX_MOVES = 50
+    TRIAL_MAX = 100
+    HISTORY_LENGTH = 40
+
+    switch_list = ["all    ", "1 rand ", "2 rand ", "1 far  ", "2 far  ", "1 close", "2 close", "1 far 1 close", "2 middle", "none   "]
     switch_list_ordered = copy.deepcopy(switch_list)
 
-    random.shuffle(switch_list)
-    # SWITCH_MAX = len(switch_list)
-    SWITCH_MAX = 1
+    # random.shuffle(switch_list)
+    SWITCH_MAX = len(switch_list)
+    # SWITCH_MAX = 1
 
     # plotting data
     difference_data = []
@@ -1731,6 +1735,8 @@ def main():
                     elif switch_list[switch] == switch_list_ordered[8]:
                         show_some_distractions(player, distraction_list[1])
                         show_some_distractions(player, distraction_list[2])
+                    elif switch_list[switch] == switch_list_ordered[9]:
+                        pass
                     if not dist_change_flag:
                         dist_change_flag = True
                         dist_change_turn[switch].append(turn_counter)
@@ -1800,13 +1806,14 @@ def plot_differences(switch_list_ordered, switch_list, difference_data, plot_tit
     #                                                     "#490092", "#006ddb", "#b66dff", "#6db6ff", "#b6dbff",
     #                                                     "#920000", "#924900", "#db6d00", "#24ff24", "#ffff6d"])
     plt.clf()
+    markers = ["o", "v", "1", "x", "H", "D", "s", "P", "|", "_"]
     # plt.gray()
     for i in switch_list_ordered:
         switch = switch_list.index(i)
         # axs[switch].hist(path_change_turn[switch], bins=20)
 
         difference_avg = np.mean(difference_data[switch], axis=0)
-        plt.plot(difference_avg, label=switch_list[switch])
+        plt.plot(difference_avg, label=switch_list[switch], marker=markers[switch], markevery=10) # , markevery=(10*(switch+1))
         # plt.scatter(y=path_change_turn[switch], x=range(len(path_change_turn[switch])))
 
     plt.title(plot_title)
