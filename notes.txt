@@ -209,3 +209,16 @@ action preference ordering over frequency.
 
 figure out preference elicitation something something 20 questions
 find out how to craft some hypothesises, and find how to reject the majority of those.
+
+
+for every possible ordering compare to the current output. somehow calculate a score of similarity, then ordering them.
+store them as preferences if 1,2,3 choose 3 then 3>2, 3>1
+
+then figure out what choices they have, and what we can add.
+
+binomial distribution test?
+
+create the distributions of number of times this is ocrrect, and number of times it isnt. then binomial to get p value
+
+
+"of all the choices i have seen in the past, find an ordering. then"

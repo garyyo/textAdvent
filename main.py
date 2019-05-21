@@ -247,6 +247,7 @@ class ScenarioBuilder:
         self.scenarioList = []
         self.current_model = {}
         self.action_history = []
+        self.action_prob_dict = {}
         self.history_length = history_length
         self.build_scenarios(["boring.json", "cat.json"])
         self.state = "wait"
@@ -293,15 +294,18 @@ class ScenarioBuilder:
 
     def initialize_actions(self):
         for i in range(self.history_length):
-            possible_actions = list(random.choices(self.action_choices, k=math.floor(random.uniform(0, 4))))
+            possible_actions = list(random.choices(self.action_choices, k=math.floor(random.uniform(1, 4))))
             action = np.random.choice(list(self.player_model.keys()), p=list(self.player_model.values()))
+            possible_actions = (set(possible_actions) | {action})
             self.action_history.append((action, possible_actions))
         pass
 
     def add_action(self, action, possible_actions):
-        if action in self.action_choices:
+        if action in ["move", ""]:
+            action = "wait"
+        if action in self.action_choices or action == "wait":
             self.action_history.append((action, possible_actions))
-        self.action_choices = self.action_choices[:self.history_length]
+        self.action_history = self.action_history[-self.history_length:]
         pass
 
     def update_model(self, command_array, possible_actions):
@@ -323,7 +327,6 @@ class ScenarioBuilder:
         # check against expected
         difference = self.model_difference()
         entropy = self.calculate_entropy()
-
 
         # given those actions which other action is most probable?
         distraction_list = self.get_action_prob(available_actions)
@@ -363,17 +366,14 @@ class ScenarioBuilder:
 
     def calculate_model(self):
         # based on the player action history, create a model, currently the relative frequency of all relevant actions
-        action_frequency = {}
-        # properly initalize
-        for action in self.action_choices:
-            action_frequency[action] = 0
+        action_frequency = {action: 0 for action in self.action_choices}
 
-        for action_tuple in self.action_history:
-            # print(action_tuple)
-            action, possible_actions = action_tuple
-            if action not in action_frequency:
-                action_frequency[action] = 0
-            action_frequency[action] += 1
+        for action, possible_actions in self.action_history:
+            # since we dont want to have a probability of something that isnt relevant, check it
+            if action in self.action_choices:
+                if action not in action_frequency:
+                    action_frequency[action] = 0
+                action_frequency[action] += 1
 
         for action in action_frequency:
             if action_frequency[action] == 0:
@@ -384,6 +384,30 @@ class ScenarioBuilder:
             action_frequency[action] = action_frequency[action] / self.history_length
         self.current_model = action_frequency
         self.normalize_current_model()
+
+        action_frequency = {action: 0 for action in self.action_choices}
+        # calculate dictionary?
+        self.calculate_probability_dict()
+
+        # use dictionary to create a better model.
+        pprint(self.action_prob_dict)
+        for action_possibility, actions_taken in self.action_prob_dict.items():
+            # match them up with the complementary action dict entry
+
+            pass
+        print(action_frequency)
+        exit(0)
+        pass
+
+    def calculate_probability_dict(self):
+        self.action_prob_dict = {}
+        for action, key in self.action_history:
+            old = []
+            key = tuple(sorted(key))
+            if key in self.action_prob_dict:
+                old = self.action_prob_dict[key]
+
+            self.action_prob_dict[key] = [action] + old
 
     def calculate_entropy(self):
         def sort_dict(dictionary): return [v for k, v in sorted(dictionary.items())]
@@ -1486,7 +1510,7 @@ class History:
             if full_action is not None:
                 full_actions[action] = full_action
 
-        if not full_actions or random.random() > .9:
+        if not full_actions or random.random() > .7:
             # create list of available directions.
             available_directions = [x.get_direction() for x in self.player.get_current_room().get_links()]
             return random.choice(available_directions + ["wait"]), list(full_actions.keys())
@@ -1496,7 +1520,7 @@ class History:
             for i in full_actions.keys():
                 partial_model[i] = true_model[i]
 
-            self.normalize_player_model(partial_model)
+            partial_model = self.normalize_player_model(partial_model)
             partial_action = np.random.choice(list(partial_model.keys()), p=list(partial_model.values()))
             return full_actions[partial_action], list(full_actions.keys())
 
@@ -1593,15 +1617,16 @@ def main():
     # DM_MODEL = dict(look=.1, pickup=.1, talk=.7, use=.1)
 
     MAX_MOVES = 50
-    TRIAL_MAX = 100
+    TRIAL_MAX = 1
     HISTORY_LENGTH = 40
 
     switch_list = ["all    ", "1 rand ", "2 rand ", "1 far  ", "2 far  ", "1 close", "2 close", "1 far 1 close", "2 middle", "none   "]
     switch_list_ordered = copy.deepcopy(switch_list)
 
+    switch_list = ["1 far  "] + switch_list
     # random.shuffle(switch_list)
-    SWITCH_MAX = len(switch_list)
-    # SWITCH_MAX = 1
+    # SWITCH_MAX = len(switch_list)
+    SWITCH_MAX = 1
 
     # plotting data
     difference_data = []
@@ -1793,9 +1818,9 @@ def main():
 
         print(switch_list[switch], "\t", np.round((path_change_avg - dist_change_avg), 2))
 
-    plot_differences(switch_list_parsed, switch_list, difference_data, "Player Model vs. Action Model")
-    plot_differences(switch_list_parsed, switch_list, difference_tc_data, "True Model vs. Current Model")
-    plot_differences(switch_list_parsed, switch_list, difference_tp_data, "True Model vs. Player Model")
+    # plot_differences(switch_list_parsed, switch_list, difference_data, "Player Model vs. Action Model")
+    # plot_differences(switch_list_parsed, switch_list, difference_tc_data, "True Model vs. Current Model")
+    # plot_differences(switch_list_parsed, switch_list, difference_tp_data, "True Model vs. Player Model")
 
     print("thing")
     pass
