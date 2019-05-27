@@ -11,6 +11,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.spatial.distance
+import itertools
+import collections
 
 from base import *
 from entity import *
@@ -319,10 +321,19 @@ class ScenarioBuilder:
         self.add_action(command_array[0], possible_actions)
 
         # recalculate model
-        self.calculate_model()
+        # self.calculate_model()
+
+        # ~~~ the new way? ~~~
+        # this gets the actual model, but we want an ordering?
+        # pprint(self.player.get_available_actions())
+        # exit(0)
+
+        self.calculate_probability_dict()
+        self.current_model, action_frequencies = self.calculate_probability_ordering()
 
         # get available action
-        available_actions = self.get_available_actions()
+        # available_actions = self.get_available_actions()
+        available_actions = self.player.get_available_actions()
 
         # check against expected
         difference = self.model_difference()
@@ -330,6 +341,19 @@ class ScenarioBuilder:
 
         # given those actions which other action is most probable?
         distraction_list = self.get_action_prob(available_actions)
+
+        # test if ordering is correct given the past.
+
+        d = self.distribution_difference(action_frequencies)
+        sorted_d = sorted(d.items(), key=lambda x: x[1], reverse=True)
+        print(sorted_d)
+        # exit(0)
+
+        good_distractions = sorted_d[0][0]
+
+        # we have a perceived preference ordering. that's the current model.
+        # given that preference
+        distraction_num = 0
 
         # distraction_list = self.deploy_distraction()
 
@@ -341,7 +365,8 @@ class ScenarioBuilder:
 
         self.large_threshold = self.large_threshold * .99
 
-        data = [difference, entropy, distraction_list]
+        data = [difference, entropy, good_distractions, len(good_distractions)]
+        # data = [difference, entropy, distraction_list, distraction_num]
         if difference is None or difference is np.nan:
             print("this should never happen, you messed up chi-squared.")
             return data, {"end": True, "distraction": False}
@@ -364,7 +389,70 @@ class ScenarioBuilder:
 
         return data, {"end": False, "distraction": False}
 
+    def distribution_difference(self, action_frequencies):
+        def powerset(iterable):
+            s = list(iterable)
+            return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(len(s) + 1))
+        available_actions = self.player.get_available_actions()
+        accepted_ordering = self.get_ordering_from_model(self.current_model)
+        action_additions = list(set(self.action_choices) - set(available_actions))
+        added_actions_scores = {}
+        base_case = {}
+        # todo: verify that the base case is always first
+        for added_actions in powerset(action_additions):
+            added_actions = list(added_actions)
+            added_actions_difference = 0
+            new_available_actions = available_actions + added_actions
+
+            for action_taken in new_available_actions:
+                # generate new things to add to
+                new_action_frequencies = copy.deepcopy(action_frequencies)
+                ordering_difference = 0
+                if added_actions or action_taken:
+                    for action in available_actions:
+                        if action_taken != action:
+                            if (action_taken, action) in new_action_frequencies:
+                                new_action_frequencies[(action_taken, action)] += 1
+                            else:
+                                new_action_frequencies[(action_taken, action)] = 1
+
+                for current_ordering in list(itertools.permutations(accepted_ordering)):
+                    count_for = 0
+                    count_against = 0
+
+                    for action, count in new_action_frequencies.items():
+                        if action[0] in current_ordering and action[1] in current_ordering:
+                            if current_ordering.index(action[0]) < current_ordering.index(action[1]):
+                                count_for += count
+                            else:
+                                count_against += count
+
+                    # print(current_ordering, count_for, count_against+count_for)
+
+                    # if the added actions is empty, store the result as a base case.
+                    # else compare against base case
+                    if not added_actions:
+                        if count_against+count_for != 0:
+                            base_case[current_ordering] = count_for/(count_against+count_for)
+                    else:
+                        if current_ordering not in base_case:
+                            base_case[current_ordering] = 0
+                        if count_for == 0:
+                            count_against = 1
+                        ordering_difference = abs(base_case[current_ordering] - count_for/(count_against+count_for))
+                # print(added_actions, ordering_difference)
+
+                if not added_actions:
+                    break
+                else:
+                    added_actions_difference += ordering_difference
+            if len(new_available_actions) != 0:
+                added_actions_scores[tuple(added_actions)] = added_actions_difference/len(new_available_actions)
+        # pprint(added_actions_scores)
+        return added_actions_scores
+
     def calculate_model(self):
+        # ~~~the old way~~~
         # based on the player action history, create a model, currently the relative frequency of all relevant actions
         action_frequency = {action: 0 for action in self.action_choices}
 
@@ -384,19 +472,7 @@ class ScenarioBuilder:
             action_frequency[action] = action_frequency[action] / self.history_length
         self.current_model = action_frequency
         self.normalize_current_model()
-
-        action_frequency = {action: 0 for action in self.action_choices}
-        # calculate dictionary?
-        self.calculate_probability_dict()
-
-        # use dictionary to create a better model.
-        pprint(self.action_prob_dict)
-        for action_possibility, actions_taken in self.action_prob_dict.items():
-            # match them up with the complementary action dict entry
-
-            pass
-        print(action_frequency)
-        exit(0)
+        # ~~~ end the old way ~~~
         pass
 
     def calculate_probability_dict(self):
@@ -408,6 +484,50 @@ class ScenarioBuilder:
                 old = self.action_prob_dict[key]
 
             self.action_prob_dict[key] = [action] + old
+
+    def calculate_probability_ordering(self):
+        action_preference_frequency = {}
+        action_preference_totals = {}
+        for actions, good_actions in self.action_prob_dict.items():
+            for action in actions:
+                if len(actions) > 1:
+                    for good_action in good_actions:
+                        if action == good_action:
+                            continue
+                        # store a list of action preference
+                        action_preference = (good_action, action)
+                        if action_preference not in action_preference_frequency:
+                            action_preference_frequency[action_preference] = 0
+                        if good_action not in action_preference_totals:
+                            action_preference_totals[good_action] = 0
+                        action_preference_frequency[action_preference] += 1
+                        action_preference_totals[good_action] += 1
+
+            pass
+
+        for action in self.action_choices:
+            if action not in action_preference_totals:
+                action_preference_totals[action] = 0
+        action_preference_totals.pop("wait", None)
+        # pprint(action_preference_totals)
+        # pprint(action_preference_frequency)
+
+        list_sum = sum(action_preference_totals.values())
+        if list_sum != 0:
+            for key, value in action_preference_totals.items():
+                action_preference_totals[key] = value / list_sum
+
+        # pprint(action_preference_totals)
+        # pprint(action_preference_frequency)
+        # pprint(self.current_model)
+        # exit(0)
+
+        return action_preference_totals, action_preference_frequency
+
+    def get_ordering_from_model(self, model):
+        # take in a model, output an ordering
+        ordering = [i[0] for i in sorted(model.items(), key=lambda kv: kv[1], reverse=True)]
+        return ordering
 
     def calculate_entropy(self):
         def sort_dict(dictionary): return [v for k, v in sorted(dictionary.items())]
@@ -1623,10 +1743,10 @@ def main():
     switch_list = ["all    ", "1 rand ", "2 rand ", "1 far  ", "2 far  ", "1 close", "2 close", "1 far 1 close", "2 middle", "none   "]
     switch_list_ordered = copy.deepcopy(switch_list)
 
-    switch_list = ["1 far  "] + switch_list
+    switch_list = [switch_list[9]] + switch_list
     # random.shuffle(switch_list)
     # SWITCH_MAX = len(switch_list)
-    SWITCH_MAX = 1
+    SWITCH_MAX = 2
 
     # plotting data
     difference_data = []
@@ -1711,7 +1831,7 @@ def main():
                 command_array = parser.parse_commands(command)
 
                 data, msg = dm.update_model(command_array, possible_actions)
-                dm_difference, entropy, distraction_list = data
+                dm_difference, entropy, distraction_list, distraction_num = data
 
                 difference_tc = model_distances(TRUE_MODEL, dm.current_model)
                 difference_tp = model_distances(TRUE_MODEL, dm.player_model)
@@ -1735,33 +1855,40 @@ def main():
                         print("distraction activated")
 
                     hide_all_distractions(player)
-                    if switch_list[switch] == switch_list_ordered[0]:
-                        show_some_distractions(player, distraction_list[3])
-                        show_some_distractions(player, distraction_list[2])
-                        show_some_distractions(player, distraction_list[1])
-                        show_some_distractions(player, distraction_list[0])
-                    elif switch_list[switch] == switch_list_ordered[1]:
-                        show_random_distraction(player)
-                    elif switch_list[switch] == switch_list_ordered[2]:
-                        show_2_random_distraction(player)
-                    elif switch_list[switch] == switch_list_ordered[3]:
-                        show_some_distractions(player, distraction_list[0])
-                    elif switch_list[switch] == switch_list_ordered[4]:
-                        show_some_distractions(player, distraction_list[0])
-                        show_some_distractions(player, distraction_list[1])
-                    elif switch_list[switch] == switch_list_ordered[5]:
-                        show_some_distractions(player, distraction_list[3])
-                    elif switch_list[switch] == switch_list_ordered[6]:
-                        show_some_distractions(player, distraction_list[3])
-                        show_some_distractions(player, distraction_list[2])
-                    elif switch_list[switch] == switch_list_ordered[7]:
-                        show_some_distractions(player, distraction_list[0])
-                        show_some_distractions(player, distraction_list[3])
-                    elif switch_list[switch] == switch_list_ordered[8]:
-                        show_some_distractions(player, distraction_list[1])
-                        show_some_distractions(player, distraction_list[2])
-                    elif switch_list[switch] == switch_list_ordered[9]:
-                        pass
+                    if distraction_num is None:
+                        if switch_list[switch] == switch_list_ordered[0]:
+                            show_some_distractions(player, distraction_list[3])
+                            show_some_distractions(player, distraction_list[2])
+                            show_some_distractions(player, distraction_list[1])
+                            show_some_distractions(player, distraction_list[0])
+                        elif switch_list[switch] == switch_list_ordered[1]:
+                            show_random_distraction(player)
+                        elif switch_list[switch] == switch_list_ordered[2]:
+                            show_2_random_distraction(player)
+                        elif switch_list[switch] == switch_list_ordered[3]:
+                            show_some_distractions(player, distraction_list[0])
+                        elif switch_list[switch] == switch_list_ordered[4]:
+                            show_some_distractions(player, distraction_list[0])
+                            show_some_distractions(player, distraction_list[1])
+                        elif switch_list[switch] == switch_list_ordered[5]:
+                            show_some_distractions(player, distraction_list[3])
+                        elif switch_list[switch] == switch_list_ordered[6]:
+                            show_some_distractions(player, distraction_list[3])
+                            show_some_distractions(player, distraction_list[2])
+                        elif switch_list[switch] == switch_list_ordered[7]:
+                            show_some_distractions(player, distraction_list[0])
+                            show_some_distractions(player, distraction_list[3])
+                        elif switch_list[switch] == switch_list_ordered[8]:
+                            show_some_distractions(player, distraction_list[1])
+                            show_some_distractions(player, distraction_list[2])
+                        elif switch_list[switch] == switch_list_ordered[9]:
+                            pass
+                    else:
+                        if switch_list[switch] == switch_list_ordered[9]:
+                            pass
+                        else:
+                            for i in distraction_list:
+                                show_some_distractions(player, i)
                     if not dist_change_flag:
                         dist_change_flag = True
                         dist_change_turn[switch].append(turn_counter)
@@ -1818,9 +1945,9 @@ def main():
 
         print(switch_list[switch], "\t", np.round((path_change_avg - dist_change_avg), 2))
 
-    # plot_differences(switch_list_parsed, switch_list, difference_data, "Player Model vs. Action Model")
-    # plot_differences(switch_list_parsed, switch_list, difference_tc_data, "True Model vs. Current Model")
-    # plot_differences(switch_list_parsed, switch_list, difference_tp_data, "True Model vs. Player Model")
+    plot_differences(switch_list_parsed, switch_list, difference_data, "Player Model vs. Action Model")
+    plot_differences(switch_list_parsed, switch_list, difference_tc_data, "True Model vs. Current Model")
+    plot_differences(switch_list_parsed, switch_list, difference_tp_data, "True Model vs. Player Model")
 
     print("thing")
     pass

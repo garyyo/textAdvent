@@ -158,6 +158,43 @@ class Player:
     def get_inventory(self):
         return self.inventory
 
+    # use for DM mostly
+    def get_available_actions(self):
+        available_actions = []
+        # can the player move
+        # if len(self.current_room.get_links()) > 0:
+        #     available_actions.append("move")
+
+        for actor in self.current_room.get_actors_visible():
+            # can the player speak to someone
+            if len(actor.get_topics_list(self.keyring)):
+                if "talk" not in available_actions:
+                    available_actions.append("talk")
+            if len(actor.get_events_type("onExamine")):
+                if "look" not in available_actions:
+                    available_actions.append("look")
+
+        # can the player pick something up, (or have something in their inventory??)?
+        for item in self.current_room.get_items_visible():
+            if len(item.get_events_type("onPickup")) > 0:
+                available_actions.append("pickup")
+            if len(item.get_events_type("onExamine")):
+                if "look" not in available_actions:
+                    available_actions.append("look")
+            if len(item.get_events_type("onUse")):
+                if "use" not in available_actions:
+                    available_actions.append("use")
+        # can the player examine a thing?
+        # can the player interact with stuff?
+
+        # if there is a distraction, then add the type of that distraction to the available actions list
+        for item in self.current_room.get_items_visible():
+            if item.get_distractor():
+                if item.distraction_type not in available_actions:
+                    available_actions.append(item.distraction_type)
+
+        return available_actions
+
     # remove from room, add to inventory
     # todo: move outside of player. this is an action
     def pickup(self, item_name):

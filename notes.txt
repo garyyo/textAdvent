@@ -218,7 +218,32 @@ then figure out what choices they have, and what we can add.
 
 binomial distribution test?
 
-create the distributions of number of times this is ocrrect, and number of times it isnt. then binomial to get p value
+create the distributions of number of times this is correct, and number of times it isnt. then binomial to get p value
 
 
 "of all the choices i have seen in the past, find an ordering. then"
+
+given the current choices, what choices can we add that makes it gain the most info.
+
+info here is rejecting hypotheses.
+
+a hypothesis here is an ordering.
+
+so what choice(s) can we add that says a number of orderings is wrong, (that isnt reaffirming the current one?)
+
+if we already know a lot of about two choices, then we can see what happens when we do the other choices.
+
+generate a distribution from the 24 possible alternatives.
+for each possible action addition,
+    for all possible actions + the added action, pretend the user made a choice
+        recalculate the above distribution for those,
+        and find out how different it is.
+
+    the sum of the differences in those is how likely that action addition is to make a difference on the whole
+the action addition with the largest difference is the one we want to give.
+
+this will likely favor giving all choices, but we can weigh the actions by how likely they are based on recent past.
+
+store softmax of each percentage in dict of hypothesis.
+find entropy of each choice, and the max, min, or avg to get it per action choices
+then max of that entropy of each choice.
